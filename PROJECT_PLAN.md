@@ -13,22 +13,22 @@ A GEO (Generative Engine Optimization) analysis service that analyzes any websit
 
 ## Stack
 
-| Layer | Technology | Source |
-|---|---|---|
-| Runtime | Bun | voiceai pattern |
-| API | Elysia + @elysiajs/swagger | aciktirio pattern |
-| ORM | Drizzle + postgres | aciktirio pattern |
-| Queue | BullMQ + ioredis | aciktirio pattern |
-| Auth | better-auth | aciktirio pattern |
-| Error handling | tsentials (Result<T>, AppError, Rule Engine) | senrecep/tsentials |
+| Layer | Technology |
+|---|---|
+| Runtime | Bun |
+| API | Elysia + @elysiajs/swagger |
+| ORM | Drizzle + postgres |
+| Queue | BullMQ + ioredis |
+| Auth | better-auth |
+| Error handling | tsentials (Result<T>, AppError, Rule Engine) |
 | AI | Vercel AI SDK v5 + @ai-sdk/google + @ai-sdk/anthropic |
-| Scraping | Self-hosted Firecrawl (Docker) + @mendable/firecrawl-js | |
-| Frontend | Next.js 16 + Tailwind v4 | invitra pattern |
-| Storage | Cloudflare R2 (free tier, 10GB/mo) | — |
-| CDN/Security | Cloudflare free tier (CDN + WAF + DDoS) | — |
-| Linter | Biome | aciktirio pattern |
-| Package manager | Bun workspaces | voiceai pattern |
-| Deploy | Dokploy on VDS | existing infra |
+| Scraping | Self-hosted Firecrawl (Docker) + @mendable/firecrawl-js |
+| Frontend | Next.js 16 + Tailwind v4 |
+| Storage | Cloudflare R2 (free tier, 10GB/mo) |
+| CDN/Security | Cloudflare free tier (CDN + WAF + DDoS) |
+| Linter | Biome |
+| Package manager | Bun workspaces |
+| Deploy | Dokploy on VDS |
 
 ### AI Models (Gemini — GCP credits)
 
@@ -146,15 +146,12 @@ const hasSSR: Rule<PageData> = ctx =>
 
 ---
 
-## Reference Projects
+## Key References
 
-| Project | Path | Usage |
+| Project | URL | Role |
 |---|---|---|
-| aciktirio | `~/projects/recep/aciktirio` | Elysia + Drizzle + BullMQ pattern |
-| voiceai | `~/projects/recep/voiceai` | Bun workspaces + @google/genai models |
-| invitra | `~/projects/recep/invitra` | Next.js frontend pattern |
-| geo-seo-claude | github.com/zubair-trabzada/geo-seo-claude | Source analysis logic |
-| tsentials | github.com/senrecep/tsentials | Error handling pattern |
+| geo-seo-claude | github.com/zubair-trabzada/geo-seo-claude | Source GEO analysis logic (Python) |
+| tsentials | github.com/senrecep/tsentials | Error handling library |
 
 ---
 
