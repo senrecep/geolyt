@@ -1,0 +1,51 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[geo-seo] Bash: Use parallel execution for independent tasks.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v biome >/dev/null 2>&1 && [ -n \"$CLAUDE_TOOL_FILE_PATH\" ] && echo \"$CLAUDE_TOOL_FILE_PATH\" | grep -qE '\\.(ts|tsx|js|jsx)$'; then cd /Users/recepsen/Documents/projects/recep/geo-seo && bunx biome check \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null | head -20 || true; fi"
+          }
+        ]
+      }
+    ],
+    "PreCommit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -rn 'password\\|secret\\|api_key\\|GOOGLE_AI_API_KEY\\|ANTHROPIC_API_KEY\\|R2_SECRET' --include='*.ts' --exclude-dir=node_modules --exclude-dir=.git /Users/recepsen/Documents/projects/recep/geo-seo/packages/ 2>/dev/null | grep -v 'env\\.' | grep -v 'process\\.env' | grep -v '\\.example' && echo '⚠️  Possible hardcoded secret detected!' || true"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bun:*)",
+      "Bash(bunx:*)",
+      "Bash(docker:*)",
+      "Bash(docker compose:*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(cat plans/*)"
+    ]
+  }
+}
