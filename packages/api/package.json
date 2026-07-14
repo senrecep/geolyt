@@ -1,0 +1,27 @@
+{
+  "name": "@geolyt/api",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "build": "bun build src/index.ts --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@elysiajs/swagger": "^1.2.0",
+    "@geolyt/core": "workspace:*",
+    "@geolyt/db": "workspace:*",
+    "@geolyt/jobs": "workspace:*",
+    "@geolyt/shared": "workspace:*",
+    "better-auth": "^1.1.0",
+    "bullmq": "^5.34.0",
+    "elysia": "^1.2.0",
+    "ioredis": "^5.4.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

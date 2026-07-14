@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: geolyt-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-geolyt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-geolyt}
+      POSTGRES_DB: ${POSTGRES_DB:-geolyt}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-geolyt} -d ${POSTGRES_DB:-geolyt}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: geolyt-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  firecrawl:
+    image: ghcr.io/mendableai/firecrawl:latest
+    container_name: geolyt-firecrawl
+    ports:
+      - "${FIRECRAWL_PORT:-3002}:3002"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PLAYWRIGHT_MICROSERVICE_URL=${PLAYWRIGHT_URL:-http://playwright:3000}
+      - API_KEY=self-hosted
+      - MAX_WORKERS=2
+    depends_on:
+      redis:
+        condition: service_healthy
+      playwright:
+        condition: service_started
+
+  playwright:
+    image: browserless/chrome:latest
+    container_name: geolyt-playwright
+    ports:
+      - "${PLAYWRIGHT_PORT:-3000}:3000"
+    environment:
+      - MAX_CONCURRENT_SESSIONS=5
+      - CONNECTION_TIMEOUT=60000
+
+volumes:
+  postgres_data:
+  redis_data:
