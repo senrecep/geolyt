@@ -7,13 +7,13 @@
 
 | Phase | Status | Started | Completed | Lead |
 |---|---|---|---|---|
-| Phase 1 — Core Engine | [-] In progress | 2026-07-14 | — | Kimi Code CLI |
-| Phase 2 — AI + Dashboard | [ ] Not started | — | — | — |
+| Phase 1 — Core Engine | [x] Complete | 2026-07-14 | 2026-07-14 | Kimi Code CLI |
+| Phase 2 — AI + Dashboard | [-] In progress | 2026-07-14 | — | Kimi Code CLI |
 | Phase 3 — Production | [ ] Not started | — | — | — |
 
 ## Active Task
 
-Phase 1 finalization: API tests green, lint/typecheck clean, plans updated, GitHub issues commented/closed, PR open.
+Phase 2 implementation: start with @geolyt/ai-core (model chain, prompts, synthesis) using TDD.
 
 ## Session Log
 
@@ -21,6 +21,7 @@ Phase 1 finalization: API tests green, lint/typecheck clean, plans updated, GitH
 |---|---|---|---|---|
 | 2026-06-09 | Planning | Architecture design, stack selection, documentation | Claude Sonnet 4.6 | PROJECT_PLAN.md, CLAUDE.md, AGENTS.md, plans/* |
 | 2026-07-14 | Phase 1 implementation | Shared schemas, GeoErr, constants; core collectors and scorers with parity test; db package; jobs pipeline; Elysia API with API key auth and tests | Kimi Code CLI | packages/shared, packages/core, packages/db, packages/jobs, packages/api, plans/* |
+| 2026-07-14 | Phase 1 merge + Phase 2 start | Merged PR #44; created feature/phase-2-ai-dashboard branch | Kimi Code CLI | plans/* |
 
 ## Quick Commands
 
