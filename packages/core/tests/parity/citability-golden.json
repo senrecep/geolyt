@@ -1,0 +1,171 @@
+{
+  "name": "citability-parity-sample",
+  "description": "Static golden fixture used to detect large regressions in the citability scorer. The expected score was computed from the deterministic TypeScript heuristic; it should stay within ±5 points as the algorithm is refined.",
+  "pageData": {
+    "url": "https://example.com/ai-citations",
+    "finalUrl": "https://example.com/ai-citations",
+    "html": "<html><head><title>How to optimize for AI search</title></head><body></body></html>",
+    "title": "How to optimize for AI search",
+    "metaDescription": "A practical guide to making your content quotable by AI search engines.",
+    "canonical": "https://example.com/ai-citations",
+    "headings": [
+      { "level": 1, "text": "How to optimize for AI search" },
+      { "level": 2, "text": "Why AI citations matter" },
+      { "level": 2, "text": "Five concrete steps" },
+      { "level": 3, "text": "Structure your answers" },
+      { "level": 3, "text": "Add evidence" },
+      { "level": 2, "text": "Conclusion" }
+    ],
+    "contentBlocks": [
+      {
+        "id": "h1",
+        "tag": "h1",
+        "headings": [{ "level": 1, "text": "How to optimize for AI search" }],
+        "text": "How to optimize for AI search",
+        "wordCount": 6,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "intro",
+        "tag": "p",
+        "headings": [{ "level": 1, "text": "How to optimize for AI search" }],
+        "text": "AI search engines quote concise, self-contained passages. This guide explains how to structure content so it is easy for models to cite.",
+        "wordCount": 23,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "h2-1",
+        "tag": "h2",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Why AI citations matter" }
+        ],
+        "text": "Why AI citations matter",
+        "wordCount": 5,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "p-why",
+        "tag": "p",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Why AI citations matter" }
+        ],
+        "text": "A study found that 68% of AI overviews include at least one external citation. Pages that provide clear, factual paragraphs are more likely to be referenced by language models.",
+        "wordCount": 28,
+        "hasStats": true,
+        "hasQuote": false
+      },
+      {
+        "id": "h2-2",
+        "tag": "h2",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" }
+        ],
+        "text": "Five concrete steps",
+        "wordCount": 4,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "ul-steps",
+        "tag": "ul",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" }
+        ],
+        "text": "Start with a direct answer. Include statistics or examples. Use headings every 300 words. Keep paragraphs under 80 words. Add a summary sentence.",
+        "wordCount": 26,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "h3-1",
+        "tag": "h3",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" },
+          { "level": 3, "text": "Structure your answers" }
+        ],
+        "text": "Structure your answers",
+        "wordCount": 4,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "p-structure",
+        "tag": "p",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" },
+          { "level": 3, "text": "Structure your answers" }
+        ],
+        "text": "Models favor paragraphs that answer a question in the first sentence and then provide supporting context. Aim for 40 to 80 words per paragraph.",
+        "wordCount": 26,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "h3-2",
+        "tag": "h3",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" },
+          { "level": 3, "text": "Add evidence" }
+        ],
+        "text": "Add evidence",
+        "wordCount": 3,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "table-evidence",
+        "tag": "table",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Five concrete steps" },
+          { "level": 3, "text": "Add evidence" }
+        ],
+        "text": "Tactic Impact\nDirect answer High\nStatistics Medium\nExamples High",
+        "wordCount": 8,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "h2-3",
+        "tag": "h2",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Conclusion" }
+        ],
+        "text": "Conclusion",
+        "wordCount": 2,
+        "hasStats": false,
+        "hasQuote": false
+      },
+      {
+        "id": "p-conclusion",
+        "tag": "p",
+        "headings": [
+          { "level": 1, "text": "How to optimize for AI search" },
+          { "level": 2, "text": "Conclusion" }
+        ],
+        "text": "By making your content direct, structured and evidence-based, you increase the chance that AI systems quote it. Start with one page and measure the change.",
+        "wordCount": 26,
+        "hasStats": false,
+        "hasQuote": false
+      }
+    ],
+    "structuredData": [],
+    "robots": null,
+    "llmsTxt": null,
+    "headers": {},
+    "contentInRawHtml": true,
+    "collectedAt": "2026-07-14T00:00:00.000Z"
+  },
+  "expectedScore": 42
+}
