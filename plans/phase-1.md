@@ -2,87 +2,115 @@
 
 **Duration:** 2 weeks  
 **Goal:** Deterministic scoring engine + Elysia API + BullMQ pipeline + Firecrawl Docker  
-**Status:** 🔴 Not started
+**Status:** [-] In progress — implementation complete, finalizing issues and PR
 
 ## Acceptance Criteria
 
-- [ ] `POST /audits` returns 202 with audit_id
-- [ ] `GET /audits/:id` returns status + result when complete
-- [ ] Citability scorer output matches Python original within ±5 points (parity test)
-- [ ] 403 response from Firecrawl → audit continues with `GEO.CrawlerBlocked` finding
-- [ ] `electron-srl.com` golden test produces valid AuditResult JSON
+- [x] `POST /audits` returns 202 with audit_id
+- [x] `GET /audits/:id` returns status + result when complete
+- [x] Citability scorer output matches Python original within ±5 points (parity test)
+- [x] 403 response from Firecrawl → audit continues with `GEO.CrawlerBlocked` finding
+- [ ] `electron-srl.com` golden test produces valid AuditResult JSON (deferred to end-to-end verification)
 
 ## Tasks
 
 ### Week 1
 
 #### Scaffold
-- [ ] `package.json` root with Bun workspaces (packages/*)
-- [ ] `biome.json` with strict TypeScript rules
-- [ ] `tsconfig.base.json` (strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess)
-- [ ] `docker-compose.yml` (postgres:16-alpine, redis:7-alpine, firecrawl)
-- [ ] All 6 `packages/*/package.json` with correct deps
-- **Owner:** — | **Date:** —
+- [x] `package.json` root with Bun workspaces (packages/*)
+- [x] `biome.json` with strict TypeScript rules
+- [x] `tsconfig.base.json` (strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess)
+- [x] `docker-compose.yml` (postgres:16-alpine, redis:7-alpine, firecrawl)
+- [x] All 6 `packages/*/package.json` with correct deps
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 #### packages/shared
-- [ ] `src/schemas/audit-result.ts` — Zod: AuditResult, GeoScores, Finding, CrawlerAccess
-- [ ] `src/schemas/page-data.ts` — Zod: PageData, ContentBlock, HeadingSchema
-- [ ] `src/schemas/audit-job.ts` — Zod: AuditJobInput, CollectResult, ScoreResult
-- [ ] `src/errors/geo-errors.ts` — GeoErr factory (tsentials Err)
-- [ ] `src/constants/crawlers.ts` — 14 AI crawlers with tiers
-- [ ] `src/constants/weights.ts` — all scoring weights
-- **Owner:** — | **Date:** —
+- [x] `src/schemas/audit-result.ts` — Zod: AuditResult, GeoScores, Finding, CrawlerAccess
+- [x] `src/schemas/page-data.ts` — Zod: PageData, ContentBlock, HeadingSchema
+- [x] `src/schemas/audit-job.ts` — Zod: AuditJobInput, CollectResult, ScoreResult
+- [x] `src/errors/geo-errors.ts` — GeoErr factory (tsentials Err)
+- [x] `src/constants/crawlers.ts` — 14 AI crawlers with tiers
+- [x] `src/constants/weights.ts` — all scoring weights
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 #### packages/core — Collectors
-- [ ] `src/collectors/fetch-html.ts` — plain fetch (no JS) + Playwright fallback trigger
-- [ ] `src/collectors/collect-page.ts` — Firecrawl → ResultAsync<PageData>
-- [ ] `src/collectors/collect-robots.ts` — robots.txt → ResultAsync<string|null>
-- [ ] `src/collectors/collect-llmstxt.ts` — llms.txt → ResultAsync<string|null>
-- [ ] `src/collectors/segment-blocks.ts` — Cheerio → ContentBlock[] (H2/H3 segmentation)
-- **Owner:** — | **Date:** —
+- [x] `src/collectors/fetch-html.ts` — plain fetch (no JS) + Playwright fallback trigger
+- [x] `src/collectors/collect-page.ts` — Firecrawl → ResultAsync<PageData>
+- [x] `src/collectors/collect-robots.ts` — robots.txt → ResultAsync<string|null>
+- [x] `src/collectors/collect-llmstxt.ts` — llms.txt → ResultAsync<string|null>
+- [x] `src/collectors/segment-blocks.ts` — Cheerio → ContentBlock[] (H2/H3 segmentation)
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### Week 2
 
 #### packages/core — Scorers
-- [ ] `src/scorers/citability.ts` — 5-dim scorer (Answer 30/Self 25/Struct 20/Stats 15/Unique 10)
-- [ ] `src/scorers/robots-access.ts` — 14 crawlers, tier-weighted (50/25/15/10)
-- [ ] `src/scorers/technical.ts` — 8 technical categories, Rule Engine
-- [ ] `src/scorers/schema-org.ts` — JSON-LD validation, Rule Engine
-- [ ] `src/scorers/llms-txt.ts` — presence + format validation
-- [ ] `src/scorers/composite.ts` — GEO Score formula (weighted sum)
-- [ ] `tests/parity/citability-golden.json` — Python parity fixtures
-- **Owner:** — | **Date:** —
+- [x] `src/scorers/citability.ts` — 5-dim scorer (Answer 30/Self 25/Struct 20/Stats 15/Unique 10)
+- [x] `src/scorers/robots-access.ts` — 14 crawlers, tier-weighted (50/25/15/10)
+- [x] `src/scorers/technical.ts` — 8 technical categories, Rule Engine
+- [x] `src/scorers/schema-org.ts` — JSON-LD validation, Rule Engine
+- [x] `src/scorers/llms-txt.ts` — presence + format validation
+- [x] `src/scorers/composite.ts` — GEO Score formula (weighted sum)
+- [x] `tests/parity/citability-golden.json` — Python parity fixtures
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 #### packages/api
-- [ ] `src/index.ts` — Elysia app with swagger + cors + better-auth
-- [ ] `src/routes/audits.ts` — POST /audits, GET /audits/:id, GET /audits/:id/report
-- [ ] `src/db/schema.ts` — Drizzle: clients, sites, audits, audit_results, reports, usage
-- [ ] `src/db/migrate.ts` — migration runner
-- **Owner:** — | **Date:** —
+- [x] `src/index.ts` — Elysia app factory with swagger + cors
+- [x] `src/server.ts` — server bootstrap (listens on API_PORT)
+- [x] `src/routes/audits.ts` — POST /audits, GET /audits/:id, GET /audits/:id/report
+- [x] `src/middleware/api-key.ts` — x-api-key header auth with Bun.password.verify
+- [x] `src/routes/health.ts` — DB health check
+- [x] `src/__tests__/routes.test.ts` — route integration tests
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
+
+#### packages/db (added to break circular dependency)
+- [x] `src/schema.ts` — Drizzle: clients, sites, audits, audit_results, reports, usage, api_keys
+- [x] `src/client.ts` — postgres-js client + drizzle(schema)
+- [x] `src/migrate.ts` — migration runner
+- [x] `drizzle.config.ts` — Drizzle Kit config
+- [x] `0000_charming_jetstream.sql` migration generated
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 #### packages/jobs
-- [ ] `src/queues.ts` — BullMQ queue definitions + FlowProducer
-- [ ] `src/workers/collect.ts` — Firecrawl → CollectResult (ResultAsync)
-- [ ] `src/workers/score.ts` — 6 scorers → ScoreResult (ResultAsync)
-- [ ] `src/workers/synthesize.ts` — template fallback report (no AI in Phase 1)
-- [ ] `src/workers/report.ts` — markdown template → save to disk/R2
-- [ ] `src/flow.ts` — enqueueAudit() FlowProducer wiring
-- **Owner:** — | **Date:** —
+- [x] `src/queues.ts` — BullMQ queue definitions + FlowProducer
+- [x] `src/workers/collect.ts` — Firecrawl → CollectResult (ResultAsync)
+- [x] `src/workers/score.ts` — deterministic scorers → ScoreResult (ResultAsync)
+- [x] `src/workers/synthesize.ts` — template fallback report (no AI in Phase 1)
+- [x] `src/workers/report.ts` — markdown template → save to disk
+- [x] `src/flow.ts` — enqueueAudit() FlowProducer wiring
+- [x] `src/connection.ts` — shared redis connection
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ## Files Created This Phase
 
-> Fill in as work progresses
-
 | File | Package | Description |
 |---|---|---|
-| — | — | — |
+| `src/schemas/*.ts` | shared | Zod schemas for audit data and job payloads |
+| `src/errors/geo-errors.ts` | shared | tsentials-based GeoErr factories |
+| `src/constants/crawlers.ts` | shared | 14 AI crawler definitions with tiers |
+| `src/constants/weights.ts` | shared | Citability and GEO composite weights |
+| `src/collectors/*.ts` | core | HTML fetch, Firecrawl, robots, llms.txt, segmentation |
+| `src/scorers/*.ts` | core | 6 deterministic GEO scorers |
+| `tests/parity/citability-golden.json` | core | Python parity fixtures |
+| `src/index.ts`, `src/server.ts` | api | Elysia app factory and server bootstrap |
+| `src/routes/*.ts` | api | /audits and /health routes |
+| `src/middleware/api-key.ts` | api | API key middleware |
+| `src/__tests__/routes.test.ts` | api | Route integration tests |
+| `src/schema.ts` | db | Drizzle schema |
+| `src/client.ts` | db | postgres-js + drizzle client |
+| `src/migrate.ts` | db | Migration runner |
+| `drizzle.config.ts` | db | Drizzle Kit configuration |
+| `src/queues.ts` | jobs | BullMQ queues and FlowProducer |
+| `src/workers/*.ts` | jobs | collect, score, synthesize, report workers |
+| `src/flow.ts` | jobs | enqueueAudit() wiring |
+| `src/connection.ts` | jobs | Redis connection |
 
 ## Known Blockers
 
-> None at start
+> None
 
 ## Notes
 
-- Python citability_scorer.py is the reference — run it on fixtures first to generate golden JSON
-- Self-hosted Firecrawl: `docker compose up firecrawl` — test with `curl http://localhost:3002/v1/scrape`
-- Template report (no AI) must produce a valid AuditResult — AI is Phase 2
+- `packages/db` was not in the original plan; it was added to avoid a circular dependency between `api` and `jobs`.
+- Composite score in Phase 1 leaves `brandAuthority` and `contentQuality` at 0; these are implemented in Phase 2.
+- `better-auth` UI integration is deferred to Phase 2; Phase 1 only includes API key middleware.
+- All 65 unit tests pass; lint and typecheck are clean.
