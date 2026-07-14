@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./.next",
+    "jsx": "preserve",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "allowJs": true,
+    "incremental": true
+  },
+  "include": ["next-env.d.ts", "src/**/*", "*.ts"]
+}

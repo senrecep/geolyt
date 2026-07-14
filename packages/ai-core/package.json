@@ -1,0 +1,20 @@
+{
+  "name": "@geolyt/ai-core",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.1.0",
+    "@ai-sdk/google": "^1.1.0",
+    "@geolyt/shared": "workspace:*",
+    "ai": "^4.1.0",
+    "tsentials": "^0.1.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

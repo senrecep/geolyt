@@ -1,0 +1,20 @@
+{
+  "name": "@geolyt/jobs",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@geolyt/core": "workspace:*",
+    "@geolyt/shared": "workspace:*",
+    "bullmq": "^5.34.0",
+    "ioredis": "^5.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
