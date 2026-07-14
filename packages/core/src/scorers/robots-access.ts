@@ -63,7 +63,11 @@ function isDisallowed(rules: RobotsRule[], agentName: string): boolean {
   return false
 }
 
-export function scoreRobotsAccess(robotsTxt: string | null): Result<ScorerOutput> {
+export type RobotsAccessOutput = ScorerOutput & {
+  access: CrawlerAccess[]
+}
+
+export function scoreRobotsAccess(robotsTxt: string | null): Result<RobotsAccessOutput> {
   if (robotsTxt === null || robotsTxt.trim().length === 0) {
     return Result.failure(GeoErr.noContent())
   }
@@ -107,5 +111,5 @@ export function scoreRobotsAccess(robotsTxt: string | null): Result<ScorerOutput
     })
   }
 
-  return Result.success({ score: Math.round(score), findings })
+  return Result.success({ score: Math.round(score), findings, access })
 }
