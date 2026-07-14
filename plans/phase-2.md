@@ -16,14 +16,14 @@
 ## Tasks
 
 ### packages/ai-core
-- [ ] `src/models.ts` — @ai-sdk/google provider, model routing
-- [ ] `src/provider-chain.ts` — waterfall with circuit breaker (ioredis health tracking)
-- [ ] `src/prompts/rubric.ts` — ~6k token cached GEO rubric (static, all audits)
-- [ ] `src/prompts/evidence.ts` — per-audit evidence builder (variable part)
-- [ ] `src/synthesis.ts` — generateObject() + cache_control ephemeral breakpoint
+- [x] `src/models.ts` — @ai-sdk/google provider, model routing
+- [x] `src/provider-chain.ts` — waterfall with circuit breaker (ioredis health tracking)
+- [x] `src/prompts/rubric.ts` — ~6k token cached GEO rubric (static, all audits)
+- [x] `src/prompts/evidence.ts` — per-audit evidence builder (variable part)
+- [x] `src/synthesis.ts` — generateObject() + cache_control ephemeral breakpoint
 - [ ] `src/eeat-judge.ts` — Haiku-based E-E-A-T scoring
 - [ ] Cost verification test: assert cached vs uncached token difference
-- **Owner:** — | **Date:** —
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/jobs — synthesize worker (AI)
 - [ ] Replace Phase 1 template with real AI synthesis
