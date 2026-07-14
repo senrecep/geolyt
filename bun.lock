@@ -30,18 +30,16 @@
       "dependencies": {
         "@elysiajs/swagger": "^1.2.0",
         "@geolyt/core": "workspace:*",
+        "@geolyt/db": "workspace:*",
         "@geolyt/jobs": "workspace:*",
         "@geolyt/shared": "workspace:*",
         "better-auth": "^1.1.0",
         "bullmq": "^5.34.0",
-        "drizzle-orm": "^0.38.0",
         "elysia": "^1.2.0",
         "ioredis": "^5.4.0",
-        "postgres": "^3.4.0",
         "zod": "^3.25.0",
       },
       "devDependencies": {
-        "drizzle-kit": "^0.30.0",
         "typescript": "^5.7.3",
       },
     },
@@ -57,13 +55,28 @@
         "typescript": "^5.7.3",
       },
     },
+    "packages/db": {
+      "name": "@geolyt/db",
+      "version": "0.0.1",
+      "dependencies": {
+        "@geolyt/shared": "workspace:*",
+        "drizzle-orm": "^0.38.0",
+        "postgres": "^3.4.0",
+      },
+      "devDependencies": {
+        "drizzle-kit": "^0.30.0",
+        "typescript": "^5.7.3",
+      },
+    },
     "packages/jobs": {
       "name": "@geolyt/jobs",
       "version": "0.0.1",
       "dependencies": {
         "@geolyt/core": "workspace:*",
+        "@geolyt/db": "workspace:*",
         "@geolyt/shared": "workspace:*",
         "bullmq": "^5.34.0",
+        "drizzle-orm": "^0.38.0",
         "ioredis": "^5.4.0",
       },
       "devDependencies": {
@@ -210,6 +223,8 @@
     "@geolyt/api": ["@geolyt/api@workspace:packages/api"],
 
     "@geolyt/core": ["@geolyt/core@workspace:packages/core"],
+
+    "@geolyt/db": ["@geolyt/db@workspace:packages/db"],
 
     "@geolyt/jobs": ["@geolyt/jobs@workspace:packages/jobs"],
 

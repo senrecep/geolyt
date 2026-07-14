@@ -11,8 +11,9 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "bun run --filter='*' typecheck",
-    "db:generate": "bun run --filter=@geolyt/api db:generate",
-    "db:migrate": "bun run --filter=@geolyt/api db:migrate"
+    "db:generate": "bun run --filter=@geolyt/db db:generate",
+    "db:migrate": "bun run --filter=@geolyt/db db:migrate",
+    "db:push": "bun run --filter=@geolyt/db db:push"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
