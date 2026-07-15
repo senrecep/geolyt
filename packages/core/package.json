@@ -10,6 +10,7 @@
   "dependencies": {
     "@geolyt/shared": "workspace:*",
     "cheerio": "^1.0.0",
+    "ioredis": "^5.4.0",
     "tsentials": "^0.1.10"
   },
   "devDependencies": {
