@@ -1,7 +1,6 @@
 import { fetchReport } from '@/lib/api'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Header } from '../../../_components/header'
 
 interface ReportPageProps {
   params: Promise<{ id: string }>
@@ -18,8 +17,6 @@ export default async function ReportPage({ params }: ReportPageProps) {
 
   return (
     <div className="min-h-screen">
-      <Header />
-
       <main className="mx-auto max-w-6xl p-6">
         <h1 className="mb-2 text-2xl font-semibold">Report</h1>
         <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">

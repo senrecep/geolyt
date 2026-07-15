@@ -1,7 +1,6 @@
 import { fetchAudits } from '@/lib/api'
 import { cookies } from 'next/headers'
 import { AuditList } from './_components/audit-list'
-import { Header } from './_components/header'
 import { SubmitForm } from './_components/submit-form'
 
 export default async function DashboardPage() {
@@ -10,8 +9,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <Header />
-
       <main className="mx-auto max-w-6xl p-6">
         <h1 className="mb-8 text-3xl font-semibold">Dashboard</h1>
 

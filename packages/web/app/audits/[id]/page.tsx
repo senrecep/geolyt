@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AuditProgress } from '../../_components/audit-progress'
-import { Header } from '../../_components/header'
 import { ScoreBadge } from '../../_components/score-badge'
 
 interface AuditDetailPageProps {
@@ -25,8 +24,6 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
   return (
     <div className="min-h-screen">
-      <Header />
-
       <main className="mx-auto max-w-6xl p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">{audit.url}</h1>

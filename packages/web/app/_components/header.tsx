@@ -4,7 +4,12 @@ import { authClient } from '@/lib/auth'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export function Header() {
+interface HeaderProps {
+  logoUrl?: string | undefined
+  companyName?: string | undefined
+}
+
+export function Header({ logoUrl, companyName }: HeaderProps) {
   const router = useRouter()
 
   async function handleSignOut() {
@@ -12,11 +17,17 @@ export function Header() {
     router.push('/login')
   }
 
+  const brandName = companyName ?? 'Geolyt'
+
   return (
     <header className="border-b border-[var(--color-border)] bg-[var(--color-card)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-        <Link href="/" className="text-xl font-bold tracking-tight">
-          Geolyt
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          {logoUrl ? (
+            <img src={logoUrl} alt={brandName} className="h-8 w-auto object-contain" />
+          ) : (
+            brandName
+          )}
         </Link>
 
         <nav className="flex items-center gap-4">
