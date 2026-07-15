@@ -24,5 +24,8 @@ export const GeoErr = {
 
   invalidUrl: (url: string) => Err.validation('GEO.InvalidUrl', `Invalid URL: ${url}`),
 
+  redirectBlocked: (url: string) =>
+    Err.validation('GEO.RedirectBlocked', `Redirect target is not allowed: ${url}`),
+
   internal: (description: string) => Err.unexpected('GEO.Internal', description),
 }

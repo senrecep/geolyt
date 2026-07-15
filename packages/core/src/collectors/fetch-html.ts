@@ -1,5 +1,6 @@
 import { GeoErr } from '@geolyt/shared'
 import { ResultAsync } from 'tsentials/result'
+import { isPrivateUrl } from '../utils/url.js'
 
 export type FetchedHtml = {
   url: string
@@ -25,7 +26,19 @@ type FetchResult = {
   finalUrl: string
 }
 
-async function fetchWithRedirects(url: string, remainingRedirects: number): Promise<FetchResult> {
+function sameHostname(a: string, b: string): boolean {
+  try {
+    return new URL(a).hostname === new URL(b).hostname
+  } catch {
+    return false
+  }
+}
+
+async function fetchWithRedirects(
+  url: string,
+  originalUrl: string,
+  remainingRedirects: number,
+): Promise<FetchResult> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS)
 
@@ -48,7 +61,10 @@ async function fetchWithRedirects(url: string, remainingRedirects: number): Prom
         throw new Error('Too many redirects')
       }
       const nextUrl = new URL(location, url).toString()
-      return fetchWithRedirects(nextUrl, remainingRedirects - 1)
+      if (isPrivateUrl(nextUrl) || !sameHostname(nextUrl, originalUrl)) {
+        throw GeoErr.redirectBlocked(nextUrl)
+      }
+      return fetchWithRedirects(nextUrl, originalUrl, remainingRedirects - 1)
     }
 
     return { response, finalUrl: url }
@@ -57,10 +73,19 @@ async function fetchWithRedirects(url: string, remainingRedirects: number): Prom
   }
 }
 
+function isRedirectError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'GEO.RedirectBlocked'
+  )
+}
+
 export function fetchHtml(url: string): ResultAsync<FetchedHtml> {
   return ResultAsync.try(
     async () => {
-      const { response, finalUrl } = await fetchWithRedirects(url, MAX_REDIRECTS)
+      const { response, finalUrl } = await fetchWithRedirects(url, url, MAX_REDIRECTS)
       const html = await response.text()
 
       return {
@@ -71,6 +96,6 @@ export function fetchHtml(url: string): ResultAsync<FetchedHtml> {
         statusCode: response.status,
       }
     },
-    () => GeoErr.fetchTimeout(url),
+    (error) => (isRedirectError(error) ? GeoErr.redirectBlocked(url) : GeoErr.fetchTimeout(url)),
   )
 }

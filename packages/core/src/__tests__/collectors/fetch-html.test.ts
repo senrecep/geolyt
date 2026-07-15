@@ -72,4 +72,38 @@ describe('fetchHtml', () => {
       expect(result.errors[0]?.code).toBe('GEO.FetchTimeout')
     }
   })
+
+  it('blocks cross-domain redirects', async () => {
+    globalThis.fetch = mock(() =>
+      Promise.resolve(
+        new Response('', {
+          status: 302,
+          headers: new Headers({ location: 'https://evil.com/' }),
+        }),
+      ),
+    ) as unknown as typeof fetch
+
+    const result = await fetchHtml('https://example.com/redirect').toResult()
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.errors[0]?.code).toBe('GEO.RedirectBlocked')
+    }
+  })
+
+  it('blocks redirects to private IP ranges', async () => {
+    globalThis.fetch = mock(() =>
+      Promise.resolve(
+        new Response('', {
+          status: 302,
+          headers: new Headers({ location: 'http://192.168.1.1/' }),
+        }),
+      ),
+    ) as unknown as typeof fetch
+
+    const result = await fetchHtml('https://example.com/redirect').toResult()
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.errors[0]?.code).toBe('GEO.RedirectBlocked')
+    }
+  })
 })
