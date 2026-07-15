@@ -9,10 +9,12 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "tsentials": "^0.1.10",
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-base": "^2.9.0",
     "typescript": "^5.7.3"
   }
 }
