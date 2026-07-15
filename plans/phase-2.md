@@ -32,11 +32,11 @@
 - **Owner:** — | **Date:** —
 
 ### packages/jobs — report worker (PDF)
-- [ ] `src/workers/report.ts` — Playwright page.pdf() from HTML template
-- [ ] `src/templates/report.html.ts` — HTML template for PDF
-- [ ] R2 upload via @aws-sdk/client-s3
-- [ ] Public URL generation
-- **Owner:** — | **Date:** —
+- [x] `src/workers/report.ts` — Playwright page.pdf() from HTML template
+- [x] `src/templates/report.html.ts` — HTML template for PDF
+- [x] R2 upload via @aws-sdk/client-s3
+- [x] Public URL generation
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/web (Next.js 16 dashboard)
 - [ ] Auth pages (login, signup) via better-auth
