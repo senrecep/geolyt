@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'bun:test'
 import { audits, db, reports } from '@geolyt/db'
 import { createApp } from '../index.js'
 
@@ -17,6 +17,10 @@ describe('reports route', () => {
       .returning()
 
     auditId = inserted[0]?.id ?? ''
+  })
+
+  afterEach(async () => {
+    await db.delete(reports)
   })
 
   afterAll(async () => {
@@ -46,5 +50,24 @@ describe('reports route', () => {
       new Request('http://localhost/reports/00000000-0000-0000-0000-000000000000'),
     )
     expect(response.status).toBe(404)
+  })
+
+  it('redirects to the public URL by share token', async () => {
+    const shareToken = '11111111-1111-1111-1111-111111111111'
+    await db.insert(reports).values({
+      auditId,
+      format: 'pdf',
+      storageKey: `reports/${auditId}/geo-report.pdf`,
+      publicUrl: `https://cdn.example.com/reports/${auditId}/geo-report.pdf`,
+      shareToken,
+    })
+
+    const response = await app.fetch(
+      new Request(`http://localhost/reports/share/${shareToken}`, { redirect: 'manual' }),
+    )
+    expect(response.status).toBe(302)
+    expect(response.headers.get('Location')).toBe(
+      `https://cdn.example.com/reports/${auditId}/geo-report.pdf`,
+    )
   })
 })

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { audits, db, reports } from '@geolyt/db'
 import type { AuditResult } from '@geolyt/shared'
 import { Worker } from 'bullmq'
@@ -67,6 +68,7 @@ export const reportWorker = new Worker<AuditFlowInput>(
       format: reportFormat,
       storageKey,
       publicUrl,
+      shareToken: randomUUID(),
     })
 
     await db

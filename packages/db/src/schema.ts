@@ -53,6 +53,7 @@ export const reports = pgTable('reports', {
   format: text('format').notNull(),
   storageKey: text('storage_key'),
   publicUrl: text('public_url'),
+  shareToken: text('share_token'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
