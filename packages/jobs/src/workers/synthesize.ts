@@ -47,6 +47,11 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
 
     let auditResult = buildAuditResult(job.data, scoreResult)
 
+    const auditRow = await db.query.audits.findFirst({
+      where: eq(audits.id, auditId),
+      columns: { clientId: true },
+    })
+
     try {
       const chain = new ModelChain(narrativeModels(), {
         redis: aiRedisConnection as unknown as RedisLike,
@@ -64,9 +69,8 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
           }
 
           await db.insert(usage).values({
-            clientId: null,
+            clientId: auditRow?.clientId ?? null,
             period: new Date().toISOString().slice(0, 7),
-            audits: 1,
             aiTokensCached: synthesis.value.usage.cachedPromptTokens,
             aiTokensUncached: Math.max(
               0,
