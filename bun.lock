@@ -32,6 +32,7 @@
       "dependencies": {
         "@better-auth/drizzle-adapter": "^1.6.23",
         "@elysiajs/swagger": "^1.2.0",
+        "@geolyt/ai-core": "workspace:*",
         "@geolyt/core": "workspace:*",
         "@geolyt/db": "workspace:*",
         "@geolyt/jobs": "workspace:*",
