@@ -14,16 +14,38 @@ class FakeRedis {
   }
 }
 
-function fakeFetch(response: { wikipedia?: unknown; wikidata?: unknown }) {
+interface FakeFetchResponse {
+  wikipedia?: unknown
+  wikidata?: unknown
+  youtube?: unknown
+  reddit?: unknown
+}
+
+function fakeFetch(response: FakeFetchResponse) {
   return async (url: string): Promise<Response> => {
     if (url.includes('wikipedia')) {
       return Response.json({
         query: { search: response.wikipedia ? [response.wikipedia] : [] },
       })
     }
-    return Response.json({
-      search: response.wikidata ? [response.wikidata] : [],
-    })
+    if (url.includes('wikidata')) {
+      return Response.json({
+        search: response.wikidata ? [response.wikidata] : [],
+      })
+    }
+    if (url.includes('youtube')) {
+      return Response.json({
+        items: response.youtube ? [response.youtube] : [],
+      })
+    }
+    if (url.includes('reddit')) {
+      return Response.json({
+        data: {
+          children: response.reddit ? [response.reddit] : [],
+        },
+      })
+    }
+    return Response.json({})
   }
 }
 
@@ -32,7 +54,7 @@ describe('scoreBrandAuthority', () => {
     process.env.WIKIPEDIA_USER_AGENT = 'geolyt-test'
   })
 
-  it('returns a high score when both Wikipedia and Wikidata mention the brand', async () => {
+  it('returns a high score when Wikipedia and Wikidata mention the brand', async () => {
     const fetcher = fakeFetch({
       wikipedia: { title: 'Example Inc' },
       wikidata: { id: 'Q123', label: 'Example Inc' },
@@ -42,7 +64,7 @@ describe('scoreBrandAuthority', () => {
     if (!Result.isSuccess(result)) {
       throw new Error('expected success')
     }
-    expect(result.value.score).toBe(80)
+    expect(result.value.score).toBe(85)
     expect(result.value.mentions.length).toBe(2)
   })
 
@@ -71,5 +93,66 @@ describe('scoreBrandAuthority', () => {
       throw new Error('expected success')
     }
     expect(result.value.score).toBe(99)
+  })
+
+  it('includes YouTube mentions when an API key is provided', async () => {
+    const fetcher = fakeFetch({
+      youtube: { id: { videoId: 'abc123' }, snippet: { title: 'Example Inc Review' } },
+    })
+
+    const result = await scoreBrandAuthority({
+      domain: 'example.com',
+      fetcher,
+      youtubeApiKey: 'test-key',
+    })
+    if (!Result.isSuccess(result)) {
+      throw new Error('expected success')
+    }
+    expect(result.value.mentions.some((m) => m.platform === 'youtube')).toBe(true)
+    expect(result.value.score).toBe(25)
+  })
+
+  it('skips YouTube when no API key is provided', async () => {
+    const fetcher = fakeFetch({
+      youtube: { id: { videoId: 'abc123' }, snippet: { title: 'Example Inc Review' } },
+    })
+
+    const result = await scoreBrandAuthority({ domain: 'example.com', fetcher })
+    if (!Result.isSuccess(result)) {
+      throw new Error('expected success')
+    }
+    expect(result.value.mentions.some((m) => m.platform === 'youtube')).toBe(false)
+  })
+
+  it('includes Reddit mentions from the public JSON API', async () => {
+    const fetcher = fakeFetch({
+      reddit: { data: { title: 'Example Inc discussion', permalink: '/r/example/comments/1' } },
+    })
+
+    const result = await scoreBrandAuthority({ domain: 'example.com', fetcher })
+    if (!Result.isSuccess(result)) {
+      throw new Error('expected success')
+    }
+    expect(result.value.mentions.some((m) => m.platform === 'reddit')).toBe(true)
+    expect(result.value.score).toBe(20)
+  })
+
+  it('caps the brand authority score at 100', async () => {
+    const fetcher = fakeFetch({
+      wikipedia: { title: 'Example Inc' },
+      wikidata: { id: 'Q123', label: 'Example Inc' },
+      youtube: { id: { videoId: 'abc123' }, snippet: { title: 'Example Inc Review' } },
+      reddit: { data: { title: 'Example Inc discussion', permalink: '/r/example/comments/1' } },
+    })
+
+    const result = await scoreBrandAuthority({
+      domain: 'example.com',
+      fetcher,
+      youtubeApiKey: 'test-key',
+    })
+    if (!Result.isSuccess(result)) {
+      throw new Error('expected success')
+    }
+    expect(result.value.score).toBe(100)
   })
 })

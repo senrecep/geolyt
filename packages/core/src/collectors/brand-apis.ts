@@ -4,7 +4,7 @@ import { Err } from 'tsentials/errors'
 import { Result } from 'tsentials/result'
 
 export interface BrandMention {
-  platform: 'wikipedia' | 'wikidata'
+  platform: 'wikipedia' | 'wikidata' | 'youtube' | 'reddit'
   title: string
   url: string
 }
@@ -19,6 +19,7 @@ export interface ScoreBrandAuthorityOptions {
   domain: string
   redis?: Redis
   fetcher?: (url: string) => Promise<Response>
+  youtubeApiKey?: string
 }
 
 function cacheKey(domain: string): string {
@@ -77,6 +78,64 @@ async function searchWikidata(
   }))
 }
 
+async function searchYouTube(
+  term: string,
+  apiKey: string | undefined,
+  fetcher: (url: string) => Promise<Response>,
+): Promise<BrandMention[]> {
+  if (!apiKey) {
+    return []
+  }
+
+  const url = new URL('https://www.googleapis.com/youtube/v3/search')
+  url.searchParams.set('part', 'snippet')
+  url.searchParams.set('q', term)
+  url.searchParams.set('type', 'video')
+  url.searchParams.set('maxResults', '3')
+  url.searchParams.set('key', apiKey)
+
+  const response = await fetcher(url.toString())
+  if (!response.ok) {
+    return []
+  }
+
+  const data = (await response.json()) as {
+    items?: Array<{ id?: { videoId?: string }; snippet?: { title?: string } }>
+  }
+  const items = data.items ?? []
+
+  return items.slice(0, 3).map((item) => ({
+    platform: 'youtube',
+    title: item.snippet?.title ?? 'YouTube video',
+    url: `https://www.youtube.com/watch?v=${item.id?.videoId ?? ''}`,
+  }))
+}
+
+async function searchReddit(
+  term: string,
+  fetcher: (url: string) => Promise<Response>,
+): Promise<BrandMention[]> {
+  const url = new URL('https://www.reddit.com/search.json')
+  url.searchParams.set('q', term)
+  url.searchParams.set('limit', '3')
+
+  const response = await fetcher(url.toString())
+  if (!response.ok) {
+    return []
+  }
+
+  const data = (await response.json()) as {
+    data?: { children?: Array<{ data?: { title?: string; permalink?: string } }> }
+  }
+  const children = data.data?.children ?? []
+
+  return children.slice(0, 3).map((child) => ({
+    platform: 'reddit',
+    title: child.data?.title ?? 'Reddit post',
+    url: `https://www.reddit.com${child.data?.permalink ?? ''}`,
+  }))
+}
+
 function brandNameFromDomain(domain: string): string {
   return (
     domain
@@ -87,19 +146,31 @@ function brandNameFromDomain(domain: string): string {
 }
 
 function computeScore(mentions: BrandMention[]): number {
-  const hasWikipedia = mentions.some((m) => m.platform === 'wikipedia')
-  const hasWikidata = mentions.some((m) => m.platform === 'wikidata')
+  const platforms = new Set(mentions.map((m) => m.platform))
+  const hasWikipedia = platforms.has('wikipedia')
+  const hasWikidata = platforms.has('wikidata')
+  const hasYouTube = platforms.has('youtube')
+  const hasReddit = platforms.has('reddit')
 
-  if (hasWikipedia && hasWikidata) return 80
-  if (hasWikipedia) return 55
-  if (hasWikidata) return 35
-  return 10
+  let score = 10
+  if (hasWikipedia) score += 35
+  if (hasWikidata) score += 25
+  if (hasYouTube) score += 15
+  if (hasReddit) score += 10
+  if (platforms.size >= 2) score += 15
+
+  return Math.min(score, 100)
 }
 
 export async function scoreBrandAuthority(
   options: ScoreBrandAuthorityOptions,
 ): Promise<Result<BrandAuthorityOutput>> {
-  const { domain, redis, fetcher = fetch } = options
+  const {
+    domain,
+    redis,
+    fetcher = fetch,
+    youtubeApiKey = process.env.YOUTUBE_DATA_API_KEY,
+  } = options
   const cache = cacheKey(domain)
 
   if (redis) {
@@ -115,22 +186,25 @@ export async function scoreBrandAuthority(
 
   try {
     const term = brandNameFromDomain(domain)
-    const [wikipedia, wikidata] = await Promise.all([
+    const [wikipedia, wikidata, youtube, reddit] = await Promise.all([
       searchWikipedia(term, fetcher),
       searchWikidata(term, fetcher),
+      searchYouTube(term, youtubeApiKey, fetcher),
+      searchReddit(term, fetcher),
     ])
 
-    const mentions = [...wikipedia, ...wikidata]
+    const mentions = [...wikipedia, ...wikidata, ...youtube, ...reddit]
     const score = computeScore(mentions)
 
     const findings: Finding[] = []
     if (mentions.length === 0) {
       findings.push({
         code: 'BRAND.NoMentions',
-        title: 'No Wikipedia or Wikidata presence',
-        description: `No entity mentions found for ${term} on Wikipedia or Wikidata.`,
+        title: 'No brand mentions found',
+        description: `No entity mentions found for ${term} on Wikipedia, Wikidata, YouTube, or Reddit.`,
         severity: 'high',
-        recommendation: 'Create or claim a Wikipedia page and a Wikidata item.',
+        recommendation:
+          'Create or claim a Wikipedia page, Wikidata item, YouTube channel, or Reddit presence.',
       })
     } else {
       findings.push({
