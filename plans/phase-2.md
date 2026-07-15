@@ -26,16 +26,22 @@
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/jobs — synthesize worker (AI)
-- [ ] Replace Phase 1 template with real AI synthesis
-- [ ] Gemini thinkingLevel: 'minimal' for Flash, 'low' for Pro
-- [ ] On AI failure: fall back to template report (ai_synthesis_used: false)
-- **Owner:** — | **Date:** —
+- [x] Replace Phase 1 template with real AI synthesis
+- [x] Gemini thinkingLevel: 'minimal' for Flash, 'low' for Pro
+- [x] On AI failure: fall back to template report (ai_synthesis_used: false)
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/jobs — report worker (PDF)
 - [x] `src/workers/report.ts` — Playwright page.pdf() from HTML template
 - [x] `src/templates/report.html.ts` — HTML template for PDF
 - [x] R2 upload via @aws-sdk/client-s3
 - [x] Public URL generation
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
+
+### packages/jobs — score worker (E-E-A-T integration)
+- [x] `src/workers/score.ts` — call `judgeEeat()` with primary scoring model
+- [x] Recalculate composite score including `contentQuality`
+- [x] Add findings for missing AI key or judge failure without failing the audit
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/web (Next.js 16 dashboard)
@@ -48,14 +54,37 @@
 
 ### Brand mention APIs (packages/core)
 - [x] `src/collectors/brand-apis.ts` — Wikipedia API + Wikidata API (real calls)
-- [ ] YouTube Data API v3 (replace stub implementation)
-- [ ] Reddit JSON API (replace stub)
+- [x] YouTube Data API v3 (real calls when `YOUTUBE_DATA_API_KEY` is set)
+- [x] Reddit JSON API (public search endpoint)
 - [x] Redis cache (7-day TTL, brand data changes slowly)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ## Files Created This Phase
 
-> Fill in as work progresses
+### packages/ai-core
+- `src/models.ts` — Google and Anthropic provider factories
+- `src/provider-chain.ts` — circuit-breaker model chain
+- `src/synthesis.ts` — Gemini object generation for audit narratives
+- `src/eeat-judge.ts` — E-E-A-T content quality judge
+- `src/prompts/rubric.ts`, `src/prompts/evidence.ts`, `src/prompts/eeat-rubric.ts`
+- `src/__tests__/models.test.ts`, `provider-chain.test.ts`, `synthesis.test.ts`, `eeat-judge.test.ts`
+
+### packages/core
+- `src/collectors/brand-apis.ts` — Wikipedia, Wikidata, YouTube, Reddit brand scanners
+- `src/__tests__/collectors/brand-apis.test.ts`
+- `src/score-all.ts` — orchestrates deterministic GEO scoring
+
+### packages/jobs
+- `src/pdf/generate-pdf.ts` — Playwright PDF generation
+- `src/storage/r2.ts` — Cloudflare R2 upload helper
+- `src/templates/report.html.ts` — PDF HTML template
+- `src/__tests__/storage/r2.test.ts`, `templates/report.html.test.ts`
+
+### Modified in this phase
+- `packages/jobs/src/workers/synthesize.ts` — wired to real AI synthesis
+- `packages/jobs/src/workers/report.ts` — generates PDF and uploads to R2
+- `packages/jobs/src/workers/score.ts` — integrated brand authority and E-E-A-T scoring
+- `.env.example` — added AI, R2, auth, and YouTube API key placeholders
 
 ## Known Blockers
 
