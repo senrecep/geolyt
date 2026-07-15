@@ -1,5 +1,7 @@
 'use server'
 
+import { cookies } from 'next/headers'
+
 const API_BASE_URL = process.env.GEOLYT_API_URL ?? 'http://localhost:3000'
 
 export async function submitAudit(
@@ -7,21 +9,19 @@ export async function submitAudit(
 ): Promise<{ success: boolean; auditId?: string; error?: string }> {
   const url = formData.get('url') as string
   const reportFormat = (formData.get('reportFormat') as string) ?? 'pdf'
-  const apiKey = process.env.GEOLYT_DASHBOARD_API_KEY ?? ''
 
   if (!url || !URL.canParse(url)) {
     return { success: false, error: 'A valid URL is required' }
   }
 
-  if (!apiKey) {
-    return { success: false, error: 'Dashboard API key is not configured' }
-  }
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.toString()
 
   const response = await fetch(`${API_BASE_URL}/audits`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
     },
     body: JSON.stringify({ url, reportFormat }),
   })
