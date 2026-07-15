@@ -4,7 +4,10 @@ import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
+import { generatePdfFromHtml } from '../pdf/generate-pdf.js'
 import { QUEUE_NAMES } from '../queues.js'
+import { createR2Client, getR2ConfigFromEnv, uploadReport } from '../storage/r2.js'
+import { buildReportHtml } from '../templates/report.html.js'
 
 function buildMarkdownReport(audit: AuditResult): string {
   const lines = [
@@ -42,13 +45,28 @@ export const reportWorker = new Worker<AuditFlowInput>(
       throw new Error('Missing audit result')
     }
 
-    const content = buildMarkdownReport(auditResult)
-    const storageKey = `reports/${auditId}/report.md`
+    let content: string
+    let storageKey: string
+    let publicUrl: string | null = null
+
+    if (reportFormat === 'pdf') {
+      content = buildReportHtml(auditResult)
+      storageKey = `reports/${auditId}/geo-report.pdf`
+
+      const pdfBuffer = await generatePdfFromHtml(content)
+      const r2 = createR2Client(getR2ConfigFromEnv())
+      const uploaded = await uploadReport(r2, storageKey, pdfBuffer, 'application/pdf')
+      publicUrl = uploaded.publicUrl
+    } else {
+      content = buildMarkdownReport(auditResult)
+      storageKey = `reports/${auditId}/report.md`
+    }
 
     await db.insert(reports).values({
       auditId,
       format: reportFormat,
       storageKey,
+      publicUrl,
     })
 
     await db
@@ -56,7 +74,7 @@ export const reportWorker = new Worker<AuditFlowInput>(
       .set({ status: 'completed', completedAt: new Date() })
       .where(eq(audits.id, auditId))
 
-    return { storageKey, content }
+    return { storageKey, publicUrl, content }
   },
   { connection: redisConnection, concurrency: 4 },
 )

@@ -9,13 +9,15 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
     "@geolyt/ai-core": "workspace:*",
     "@geolyt/core": "workspace:*",
     "@geolyt/db": "workspace:*",
     "@geolyt/shared": "workspace:*",
     "bullmq": "^5.34.0",
     "drizzle-orm": "^0.38.0",
-    "ioredis": "^5.4.0"
+    "ioredis": "^5.4.0",
+    "playwright": "^1.50.0"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
