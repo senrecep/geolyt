@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 2 implementation: start with @geolyt/ai-core (model chain, prompts, synthesis) using TDD.
+Phase 2 implementation: add report viewer, progress polling/SSE, and public report link endpoint; keep TDD and incremental commits.
 
 ## Session Log
 
@@ -22,6 +22,7 @@ Phase 2 implementation: start with @geolyt/ai-core (model chain, prompts, synthe
 | 2026-06-09 | Planning | Architecture design, stack selection, documentation | Claude Sonnet 4.6 | PROJECT_PLAN.md, CLAUDE.md, AGENTS.md, plans/* |
 | 2026-07-14 | Phase 1 implementation | Shared schemas, GeoErr, constants; core collectors and scorers with parity test; db package; jobs pipeline; Elysia API with API key auth and tests | Kimi Code CLI | packages/shared, packages/core, packages/db, packages/jobs, packages/api, plans/* |
 | 2026-07-14 | Phase 1 merge + Phase 2 start | Merged PR #44; created feature/phase-2-ai-dashboard branch | Kimi Code CLI | plans/* |
+| 2026-07-14 | Phase 2 auth wiring | Protected /audits with API-key-or-better-auth-session; switched web client, server actions, and tests from API key to session cookies | Kimi Code CLI | packages/api/src/routes/audits.ts, packages/web/app/page.tsx, packages/web/app/audits/[id]/page.tsx, packages/web/lib/api.ts, packages/web/app/_actions/submit-audit.ts, packages/web/src/__tests__/lib/api.test.ts, packages/web/src/__tests__/actions/submit-audit.test.ts, bun.lock |
 
 ## Quick Commands
 
@@ -33,7 +34,7 @@ docker compose up -d postgres redis
 bun run db:push
 
 # Run all checks
-bun test packages/shared packages/core packages/api packages/jobs
+bun test packages/shared packages/core packages/api packages/jobs packages/ai-core packages/web
 bun run lint
 bun run typecheck
 

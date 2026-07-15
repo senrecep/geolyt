@@ -52,7 +52,7 @@
 - [x] Submit URL form → POST /audits
 - [ ] Report viewer: embedded PDF + markdown toggle
 - [ ] Progress polling or SSE for submitted audits
-- [ ] better-auth backend integration on the API (sessions for dashboard routes)
+- [x] better-auth backend integration on the API (sessions for dashboard routes)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### Brand mention APIs (packages/core)
