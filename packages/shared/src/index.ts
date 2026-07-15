@@ -1,6 +1,7 @@
 export * from './constants/crawlers.js'
 export * from './constants/weights.js'
 export * from './errors/geo-errors.js'
+export * from './schemas/ai-usage.js'
 export * from './schemas/audit-job.js'
 export * from './schemas/audit-result.js'
 export * from './schemas/page-data.js'
