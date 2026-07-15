@@ -48,7 +48,7 @@
 - [x] SSRF: block 10.x, 172.16.x, 192.168.x, 127.x in collectPage()
 - [x] Redirect validation: target must stay on same domain
 - [x] Per-domain rate limiter (Redis token bucket, 1 req/sec)
-- [ ] Secret scan pre-commit hook (grep for API keys in staged files)
+- [x] Secret scan pre-commit hook (grep for API keys in staged files)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
 ### Observability
