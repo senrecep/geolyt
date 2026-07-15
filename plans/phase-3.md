@@ -9,7 +9,7 @@
 - [ ] White-label client can use custom domain + branded PDF
 - [ ] Stripe metered billing charges per audit
 - [ ] Monthly delta reports show score change vs previous audit
-- [ ] Public shareable report link works as lead-gen
+- [x] Public shareable report link works as lead-gen
 - [x] SSRF protection blocks private IP ranges
 - [x] Per-domain rate limiting enforced (no IP ban risk)
 
@@ -36,8 +36,8 @@
 - **Owner:** — | **Date:** —
 
 ### Public report links
-- [ ] Unauthenticated `/reports/:shareToken` route
-- [ ] Share token generation on audit complete
+- [x] Unauthenticated `/reports/:shareToken` route
+- [x] Share token generation on audit complete
 - [ ] OG meta tags for social sharing (score badge)
 - **Owner:** — | **Date:** —
 
@@ -56,7 +56,17 @@
 
 ## Files Created This Phase
 
-> Fill in as work progresses
+### Security hardening
+- `packages/core/src/collectors/fetch-html.ts` — redirect validation (same domain + private IP block)
+- `packages/jobs/src/rate-limit.ts` — per-domain Redis token bucket helper
+
+### Public report links
+- `packages/api/src/routes/reports.ts` — `/reports/share/:token` endpoint
+
+### Modified this phase
+- `packages/shared/src/errors/geo-errors.ts` — added `GEO.RedirectBlocked`
+- `packages/db/src/schema.ts` — added `reports.shareToken`
+- `packages/jobs/src/workers/report.ts` — generates share token on report complete
 
 ## Known Blockers
 
