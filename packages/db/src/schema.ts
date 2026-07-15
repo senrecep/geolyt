@@ -6,6 +6,10 @@ export const clients = pgTable('clients', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionItemId: text('stripe_subscription_item_id'),
+  plan: text('plan').default('free'),
+  monthlyQuota: integer('monthly_quota').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
@@ -24,6 +28,7 @@ export const audits = pgTable(
   'audits',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    clientId: uuid('client_id').references(() => clients.id),
     siteId: uuid('site_id').references(() => sites.id),
     url: text('url').notNull(),
     status: text('status').notNull().default('pending'),
@@ -31,7 +36,11 @@ export const audits = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
   },
-  (table) => [index('audit_status_idx').on(table.status), index('audit_site_idx').on(table.siteId)],
+  (table) => [
+    index('audit_status_idx').on(table.status),
+    index('audit_site_idx').on(table.siteId),
+    index('audit_client_idx').on(table.clientId),
+  ],
 )
 
 export const auditResults = pgTable('audit_results', {
