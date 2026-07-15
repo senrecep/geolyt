@@ -1,9 +1,19 @@
-import { apiKeys, auditResults, audits, db, reports } from '@geolyt/db'
+import { apiKeys, auditResults, audits, clients, db, reports } from '@geolyt/db'
 import { enqueueAudit, reportQueue } from '@geolyt/jobs'
 import { AuditJobInput } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
 import { auth } from '../auth.js'
+import { checkQuota } from '../billing/quota.js'
+import { createStripeClient, reportUsage } from '../billing/stripe.js'
+
+function setClientId(set: Record<string, unknown>, clientId: string | null): void {
+  set.clientId = clientId
+}
+
+function getClientId(set: Record<string, unknown>): string | null {
+  return (set.clientId as string | null) ?? null
+}
 
 export const auditsRoute = new Elysia({ prefix: '/audits' })
   .onBeforeHandle(async ({ headers, request, set }) => {
@@ -13,6 +23,7 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
       for (const record of records) {
         if (await Bun.password.verify(key, record.keyHash)) {
           await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, record.id))
+          setClientId(set, record.clientId ?? null)
           return
         }
       }
@@ -26,15 +37,28 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
       set.status = 401
       return { error: 'Unauthorized' }
     }
+    setClientId(set, null)
   })
   .post(
     '/',
     async ({ body, set }) => {
       const input = AuditJobInput.parse(body)
+      const clientId = getClientId(set)
+
+      if (clientId) {
+        const client = await db.query.clients.findFirst({
+          where: eq(clients.id, clientId),
+        })
+        if (client && !(await checkQuota(clientId, client.monthlyQuota ?? 0))) {
+          set.status = 429
+          return { error: 'Monthly audit quota exceeded' }
+        }
+      }
 
       const inserted = await db
         .insert(audits)
         .values({
+          clientId,
           url: input.url,
           reportFormat: input.reportFormat,
           status: 'pending',
@@ -52,6 +76,20 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
         url: input.url,
         reportFormat: input.reportFormat,
       })
+
+      if (clientId) {
+        const client = await db.query.clients.findFirst({
+          where: eq(clients.id, clientId),
+        })
+        if (client?.stripeSubscriptionItemId && process.env.STRIPE_SECRET_KEY) {
+          try {
+            const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY)
+            await reportUsage(stripe, client.stripeSubscriptionItemId, 1)
+          } catch {
+            // Stripe reporting is best-effort; do not fail the audit request.
+          }
+        }
+      }
 
       set.status = 202
       return { audit_id: audit.id, status: audit.status }
