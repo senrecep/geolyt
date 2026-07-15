@@ -46,12 +46,18 @@ export const reportWorker = new Worker<AuditFlowInput>(
       throw new Error('Missing audit result')
     }
 
+    const auditRow = await db.query.audits.findFirst({
+      where: eq(audits.id, auditId),
+      with: { site: { with: { client: true } } },
+    })
+    const whiteLabel = auditRow?.site?.client?.whiteLabelConfig ?? undefined
+
     let content: string
     let storageKey: string
     let publicUrl: string | null = null
 
     if (reportFormat === 'pdf') {
-      content = buildReportHtml(auditResult)
+      content = buildReportHtml(auditResult, whiteLabel)
       storageKey = `reports/${auditId}/geo-report.pdf`
 
       const pdfBuffer = await generatePdfFromHtml(content)
