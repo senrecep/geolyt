@@ -6,11 +6,11 @@
 
 ## Acceptance Criteria
 
-- [ ] AI synthesis produces executive summary + findings with Gemini
+- [x] AI synthesis produces executive summary + findings with Gemini
 - [ ] Prompt caching verified (cache hit rate > 80% under load)
 - [ ] Cost per audit < $0.10 (measure actual AI token usage)
-- [ ] Next.js dashboard shows audit list + score gauges + findings
-- [ ] PDF report generates and uploads to Cloudflare R2
+- [x] Next.js dashboard shows audit list + score gauges + findings
+- [x] PDF report generates and uploads to Cloudflare R2
 - [ ] Public report link works (unauthenticated GET /reports/:id)
 
 ## Tasks
@@ -45,12 +45,15 @@
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/web (Next.js 16 dashboard)
-- [ ] Auth pages (login, signup) via better-auth
-- [ ] Dashboard: audit list with GEO scores + status badges
-- [ ] Audit detail: score breakdown gauges, findings list, crawler access table
+- [x] Next.js app router scaffold + Tailwind v4 + path aliases
+- [x] Auth pages (login, signup) via better-auth client
+- [x] Dashboard: audit list with GEO scores + status badges
+- [x] Audit detail: score breakdown gauges, findings list, crawler access table
+- [x] Submit URL form → POST /audits
 - [ ] Report viewer: embedded PDF + markdown toggle
-- [ ] Submit URL form → POST /audits → polling or SSE progress
-- **Owner:** — | **Date:** —
+- [ ] Progress polling or SSE for submitted audits
+- [ ] better-auth backend integration on the API (sessions for dashboard routes)
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### Brand mention APIs (packages/core)
 - [x] `src/collectors/brand-apis.ts` — Wikipedia API + Wikidata API (real calls)
@@ -80,11 +83,21 @@
 - `src/templates/report.html.ts` — PDF HTML template
 - `src/__tests__/storage/r2.test.ts`, `templates/report.html.test.ts`
 
+### packages/web
+- `app/layout.tsx`, `app/globals.css`, `app/page.tsx`
+- `app/login/page.tsx`, `app/signup/page.tsx`
+- `app/audits/[id]/page.tsx`
+- `app/_components/header.tsx`, `submit-form.tsx`, `audit-list.tsx`, `score-badge.tsx`, `status-badge.tsx`
+- `app/_actions/submit-audit.ts`
+- `lib/auth.ts`, `lib/api.ts`
+- `src/__tests__/components/*.test.tsx`, `actions/submit-audit.test.ts`, `lib/api.test.ts`
+- `postcss.config.mjs`, `next.config.ts`, `test-setup.ts`
+
 ### Modified in this phase
 - `packages/jobs/src/workers/synthesize.ts` — wired to real AI synthesis
 - `packages/jobs/src/workers/report.ts` — generates PDF and uploads to R2
 - `packages/jobs/src/workers/score.ts` — integrated brand authority and E-E-A-T scoring
-- `.env.example` — added AI, R2, auth, and YouTube API key placeholders
+- `.env.example` — added AI, R2, auth, dashboard, and YouTube API key placeholders
 
 ## Known Blockers
 
