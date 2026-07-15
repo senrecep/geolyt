@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { audits, db, reports } from '@geolyt/db'
 import type { AuditResult } from '@geolyt/shared'
+import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { redisConnection } from '../connection.js'
@@ -36,53 +37,55 @@ function buildMarkdownReport(audit: AuditResult): string {
 export const reportWorker = new Worker<AuditFlowInput>(
   QUEUE_NAMES.report,
   async (job) => {
-    const { auditId, reportFormat } = job.data
+    const { auditId, reportFormat, url } = job.data
 
-    await db.update(audits).set({ status: 'reporting' }).where(eq(audits.id, auditId))
+    return withSpan('jobs.report', { audit_id: auditId, url, stage: 'report' }, async () => {
+      await db.update(audits).set({ status: 'reporting' }).where(eq(audits.id, auditId))
 
-    const children = await job.getChildrenValues()
-    const auditResult = Object.values(children)[0] as AuditResult | undefined
-    if (!auditResult) {
-      throw new Error('Missing audit result')
-    }
+      const children = await job.getChildrenValues()
+      const auditResult = Object.values(children)[0] as AuditResult | undefined
+      if (!auditResult) {
+        throw new Error('Missing audit result')
+      }
 
-    const auditRow = await db.query.audits.findFirst({
-      where: eq(audits.id, auditId),
-      with: { site: { with: { client: true } } },
+      const auditRow = await db.query.audits.findFirst({
+        where: eq(audits.id, auditId),
+        with: { site: { with: { client: true } } },
+      })
+      const whiteLabel = auditRow?.site?.client?.whiteLabelConfig ?? undefined
+
+      let content: string
+      let storageKey: string
+      let publicUrl: string | null = null
+
+      if (reportFormat === 'pdf') {
+        content = buildReportHtml(auditResult, whiteLabel)
+        storageKey = `reports/${auditId}/geo-report.pdf`
+
+        const pdfBuffer = await generatePdfFromHtml(content)
+        const r2 = createR2Client(getR2ConfigFromEnv())
+        const uploaded = await uploadReport(r2, storageKey, pdfBuffer, 'application/pdf')
+        publicUrl = uploaded.publicUrl
+      } else {
+        content = buildMarkdownReport(auditResult)
+        storageKey = `reports/${auditId}/report.md`
+      }
+
+      await db.insert(reports).values({
+        auditId,
+        format: reportFormat,
+        storageKey,
+        publicUrl,
+        shareToken: randomUUID(),
+      })
+
+      await db
+        .update(audits)
+        .set({ status: 'completed', completedAt: new Date() })
+        .where(eq(audits.id, auditId))
+
+      return { storageKey, publicUrl, content }
     })
-    const whiteLabel = auditRow?.site?.client?.whiteLabelConfig ?? undefined
-
-    let content: string
-    let storageKey: string
-    let publicUrl: string | null = null
-
-    if (reportFormat === 'pdf') {
-      content = buildReportHtml(auditResult, whiteLabel)
-      storageKey = `reports/${auditId}/geo-report.pdf`
-
-      const pdfBuffer = await generatePdfFromHtml(content)
-      const r2 = createR2Client(getR2ConfigFromEnv())
-      const uploaded = await uploadReport(r2, storageKey, pdfBuffer, 'application/pdf')
-      publicUrl = uploaded.publicUrl
-    } else {
-      content = buildMarkdownReport(auditResult)
-      storageKey = `reports/${auditId}/report.md`
-    }
-
-    await db.insert(reports).values({
-      auditId,
-      format: reportFormat,
-      storageKey,
-      publicUrl,
-      shareToken: randomUUID(),
-    })
-
-    await db
-      .update(audits)
-      .set({ status: 'completed', completedAt: new Date() })
-      .where(eq(audits.id, auditId))
-
-    return { storageKey, publicUrl, content }
   },
   { connection: redisConnection, concurrency: 4 },
 )

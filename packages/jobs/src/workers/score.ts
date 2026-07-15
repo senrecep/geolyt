@@ -2,6 +2,7 @@ import { judgeEeat, scoringModels } from '@geolyt/ai-core'
 import { computeCompositeScore, scoreAll, scoreBrandAuthority } from '@geolyt/core'
 import { audits, db } from '@geolyt/db'
 import type { Finding, PageData, ScoreResult } from '@geolyt/shared'
+import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { aiRedisConnection, redisConnection } from '../connection.js'
@@ -15,88 +16,90 @@ function formatErrors(errors: ReadonlyArray<{ code: string; description: string 
 export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
   QUEUE_NAMES.score,
   async (job) => {
-    const { auditId } = job.data
+    const { auditId, url } = job.data
 
-    await db.update(audits).set({ status: 'scoring' }).where(eq(audits.id, auditId))
+    return withSpan('jobs.score', { audit_id: auditId, url, stage: 'score' }, async () => {
+      await db.update(audits).set({ status: 'scoring' }).where(eq(audits.id, auditId))
 
-    const children = await job.getChildrenValues()
-    const pageData = Object.values(children)[0] as PageData | undefined
-    if (!pageData) {
-      throw new Error('Missing collected page data')
-    }
+      const children = await job.getChildrenValues()
+      const pageData = Object.values(children)[0] as PageData | undefined
+      if (!pageData) {
+        throw new Error('Missing collected page data')
+      }
 
-    const baseResult = scoreAll(pageData)
-    if (!baseResult.ok) {
-      await db
-        .update(audits)
-        .set({ status: 'failed', completedAt: new Date() })
-        .where(eq(audits.id, auditId))
-      throw new Error(formatErrors(baseResult.errors))
-    }
+      const baseResult = scoreAll(pageData)
+      if (!baseResult.ok) {
+        await db
+          .update(audits)
+          .set({ status: 'failed', completedAt: new Date() })
+          .where(eq(audits.id, auditId))
+        throw new Error(formatErrors(baseResult.errors))
+      }
 
-    const domain = new URL(pageData.url).hostname
-    const brandResult = await scoreBrandAuthority({
-      domain,
-      redis: aiRedisConnection,
-    })
+      const domain = new URL(pageData.url).hostname
+      const brandResult = await scoreBrandAuthority({
+        domain,
+        redis: aiRedisConnection,
+      })
 
-    const brandAuthority = brandResult.ok ? brandResult.value.score : 0
-    const brandFindings = brandResult.ok ? brandResult.value.findings : []
+      const brandAuthority = brandResult.ok ? brandResult.value.score : 0
+      const brandFindings = brandResult.ok ? brandResult.value.findings : []
 
-    const contentFindings: Finding[] = []
-    let contentQuality = 0
-    if (process.env.GOOGLE_AI_API_KEY) {
-      const [eeatModel] = scoringModels()
-      if (eeatModel) {
-        const eeatResult = await judgeEeat(pageData, eeatModel)
-        if (eeatResult.ok) {
-          contentQuality = eeatResult.value.output.score
-          contentFindings.push(...eeatResult.value.output.findings)
+      const contentFindings: Finding[] = []
+      let contentQuality = 0
+      if (process.env.GOOGLE_AI_API_KEY) {
+        const [eeatModel] = scoringModels()
+        if (eeatModel) {
+          const eeatResult = await judgeEeat(pageData, eeatModel)
+          if (eeatResult.ok) {
+            contentQuality = eeatResult.value.output.score
+            contentFindings.push(...eeatResult.value.output.findings)
+          } else {
+            contentFindings.push({
+              code: 'AI.EeatJudgeFailed',
+              title: 'E-E-A-T judge unavailable',
+              description: eeatResult.errors.map((e) => e.description).join(', '),
+              severity: 'medium',
+            })
+          }
         } else {
           contentFindings.push({
-            code: 'AI.EeatJudgeFailed',
-            title: 'E-E-A-T judge unavailable',
-            description: eeatResult.errors.map((e) => e.description).join(', '),
-            severity: 'medium',
+            code: 'AI.EeatModelMissing',
+            title: 'No E-E-A-T model available',
+            description: 'No scoring model configured for content quality.',
+            severity: 'low',
           })
         }
       } else {
         contentFindings.push({
-          code: 'AI.EeatModelMissing',
-          title: 'No E-E-A-T model available',
-          description: 'No scoring model configured for content quality.',
+          code: 'AI.EeatKeyMissing',
+          title: 'E-E-A-T scoring skipped',
+          description: 'GOOGLE_AI_API_KEY is not configured; content quality defaulted to 0.',
           severity: 'low',
         })
       }
-    } else {
-      contentFindings.push({
-        code: 'AI.EeatKeyMissing',
-        title: 'E-E-A-T scoring skipped',
-        description: 'GOOGLE_AI_API_KEY is not configured; content quality defaulted to 0.',
-        severity: 'low',
+
+      const recomposite = computeCompositeScore({
+        ...baseResult.value.scores,
+        brandAuthority,
+        contentQuality,
       })
-    }
+      if (!recomposite.ok) {
+        await db
+          .update(audits)
+          .set({ status: 'failed', completedAt: new Date() })
+          .where(eq(audits.id, auditId))
+        throw new Error(formatErrors(recomposite.errors))
+      }
 
-    const recomposite = computeCompositeScore({
-      ...baseResult.value.scores,
-      brandAuthority,
-      contentQuality,
+      const result: ScoreResult = {
+        scores: recomposite.value,
+        findings: [...baseResult.value.findings, ...brandFindings, ...contentFindings],
+        crawlerAccess: baseResult.value.crawlerAccess,
+      }
+
+      return result
     })
-    if (!recomposite.ok) {
-      await db
-        .update(audits)
-        .set({ status: 'failed', completedAt: new Date() })
-        .where(eq(audits.id, auditId))
-      throw new Error(formatErrors(recomposite.errors))
-    }
-
-    const result: ScoreResult = {
-      scores: recomposite.value,
-      findings: [...baseResult.value.findings, ...brandFindings, ...contentFindings],
-      crawlerAccess: baseResult.value.crawlerAccess,
-    }
-
-    return result
   },
   { connection: redisConnection, concurrency: 20 },
 )
