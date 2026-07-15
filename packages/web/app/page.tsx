@@ -1,11 +1,12 @@
 import { fetchAudits } from '@/lib/api'
+import { cookies } from 'next/headers'
 import { AuditList } from './_components/audit-list'
 import { Header } from './_components/header'
 import { SubmitForm } from './_components/submit-form'
 
 export default async function DashboardPage() {
-  const apiKey = process.env.GEOLYT_DASHBOARD_API_KEY ?? ''
-  const audits = apiKey ? await fetchAudits(apiKey).catch(() => []) : []
+  const cookieStore = await cookies()
+  const audits = await fetchAudits(cookieStore.toString()).catch(() => [])
 
   return (
     <div className="min-h-screen">

@@ -11,9 +11,17 @@ interface AuditListItem {
   result: AuditResult | null
 }
 
-export async function fetchAudits(apiKey: string): Promise<AuditListItem[]> {
+function buildHeaders(cookie?: string): HeadersInit {
+  const headers: HeadersInit = {}
+  if (cookie) {
+    headers.cookie = cookie
+  }
+  return headers
+}
+
+export async function fetchAudits(cookie?: string): Promise<AuditListItem[]> {
   const response = await fetch(`${API_BASE_URL}/audits`, {
-    headers: { 'x-api-key': apiKey },
+    headers: buildHeaders(cookie),
     next: { revalidate: 10 },
   })
 
@@ -25,9 +33,9 @@ export async function fetchAudits(apiKey: string): Promise<AuditListItem[]> {
   return data
 }
 
-export async function fetchAudit(auditId: string, apiKey: string): Promise<AuditListItem> {
+export async function fetchAudit(auditId: string, cookie?: string): Promise<AuditListItem> {
   const response = await fetch(`${API_BASE_URL}/audits/${auditId}`, {
-    headers: { 'x-api-key': apiKey },
+    headers: buildHeaders(cookie),
     next: { revalidate: 5 },
   })
 

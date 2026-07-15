@@ -1,4 +1,5 @@
 import { fetchAudit } from '@/lib/api'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Header } from '../../_components/header'
 import { ScoreBadge } from '../../_components/score-badge'
@@ -10,8 +11,8 @@ interface AuditDetailPageProps {
 
 export default async function AuditDetailPage({ params }: AuditDetailPageProps) {
   const { id } = await params
-  const apiKey = process.env.GEOLYT_DASHBOARD_API_KEY ?? ''
-  const audit = apiKey ? await fetchAudit(id, apiKey).catch(() => null) : null
+  const cookieStore = await cookies()
+  const audit = await fetchAudit(id, cookieStore.toString()).catch(() => null)
 
   if (!audit) {
     notFound()
