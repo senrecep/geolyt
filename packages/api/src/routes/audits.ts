@@ -1,5 +1,5 @@
 import { apiKeys, auditResults, audits, db, reports } from '@geolyt/db'
-import { enqueueAudit } from '@geolyt/jobs'
+import { enqueueAudit, reportQueue } from '@geolyt/jobs'
 import { AuditJobInput } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
@@ -104,4 +104,52 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
       storage_key: report.storageKey,
       public_url: report.publicUrl,
     }
+  })
+  .get('/:id/stream', async ({ params: { id }, set }) => {
+    const job = await reportQueue.getJob(id)
+    if (!job) {
+      set.status = 404
+      return { error: 'Audit job not found' }
+    }
+
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: string, data: unknown) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+        }
+
+        let finished = false
+        let checks = 0
+        const maxChecks = 360
+
+        while (!finished && checks < maxChecks) {
+          checks++
+          const state = await job.getState()
+          const progress = typeof job.progress === 'number' ? job.progress : 0
+          send('status', { status: state, progress })
+
+          if (state === 'completed' || state === 'failed') {
+            finished = true
+            controller.close()
+            break
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 5000))
+        }
+
+        if (!finished) {
+          send('status', { status: 'timeout', progress: 0 })
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
   })
