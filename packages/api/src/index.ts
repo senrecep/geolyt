@@ -7,6 +7,7 @@ import { healthRoute } from './routes/health.js'
 import { reportsRoute } from './routes/reports.js'
 import { sitesRoute } from './routes/sites.js'
 import { usageRoute } from './routes/usage.js'
+import { webhooksRoute } from './routes/webhooks.js'
 
 export function createApp() {
   return new Elysia()
@@ -18,6 +19,7 @@ export function createApp() {
     .use(clientsRoute)
     .use(sitesRoute)
     .use(usageRoute)
+    .use(webhooksRoute)
     .onError(({ code, error, set }) => {
       set.status = code === 'NOT_FOUND' ? 404 : 500
       return {

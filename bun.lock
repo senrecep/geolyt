@@ -48,6 +48,7 @@
         "elysia": "^1.2.0",
         "ioredis": "^5.4.0",
         "stripe": "^17.0.0",
+        "tsentials": "^0.1.10",
         "zod": "^3.25.0",
       },
       "devDependencies": {
