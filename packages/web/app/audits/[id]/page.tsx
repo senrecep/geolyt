@@ -2,9 +2,9 @@ import { fetchAudit } from '@/lib/api'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { AuditProgress } from '../../_components/audit-progress'
 import { Header } from '../../_components/header'
 import { ScoreBadge } from '../../_components/score-badge'
-import { StatusBadge } from '../../_components/status-badge'
 
 interface AuditDetailPageProps {
   params: Promise<{ id: string }>
@@ -31,7 +31,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">{audit.url}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
-            <StatusBadge status={audit.status} />
+            <AuditProgress auditId={id} initialStatus={audit.status} />
             <span>Created {new Date(audit.created_at).toLocaleString()}</span>
             {audit.completed_at && (
               <span>Completed {new Date(audit.completed_at).toLocaleString()}</span>
