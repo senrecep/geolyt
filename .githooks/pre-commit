@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+bun run scripts/secret-scan.ts $STAGED_FILES

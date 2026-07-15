@@ -13,7 +13,8 @@
     "typecheck": "bun run --filter='*' typecheck",
     "db:generate": "bun run --filter=@geolyt/db db:generate",
     "db:migrate": "bun run --filter=@geolyt/db db:migrate",
-    "db:push": "bun run --filter=@geolyt/db db:push"
+    "db:push": "bun run --filter=@geolyt/db db:push",
+    "secret-scan": "bun run scripts/secret-scan.ts $(git diff --cached --name-only --diff-filter=ACM)"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
