@@ -11,6 +11,13 @@ interface AuditListItem {
   result: AuditResult | null
 }
 
+interface ReportInfo {
+  audit_id: string
+  format: string
+  storage_key: string
+  public_url: string
+}
+
 function buildHeaders(cookie?: string): HeadersInit {
   const headers: HeadersInit = {}
   if (cookie) {
@@ -42,6 +49,20 @@ export async function fetchAudit(auditId: string, cookie?: string): Promise<Audi
   const data = (await response.json()) as AuditListItem | { error: string }
   if (!response.ok || 'error' in data) {
     throw new Error('error' in data ? data.error : `Failed to fetch audit: ${response.status}`)
+  }
+
+  return data
+}
+
+export async function fetchReport(auditId: string, cookie?: string): Promise<ReportInfo> {
+  const response = await fetch(`${API_BASE_URL}/audits/${auditId}/report`, {
+    headers: buildHeaders(cookie),
+    next: { revalidate: 5 },
+  })
+
+  const data = (await response.json()) as ReportInfo | { error: string }
+  if (!response.ok || 'error' in data) {
+    throw new Error('error' in data ? data.error : `Failed to fetch report: ${response.status}`)
   }
 
   return data

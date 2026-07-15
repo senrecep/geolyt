@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { fetchAudit, fetchAudits } from '../../../lib/api'
+import { fetchAudit, fetchAudits, fetchReport } from '../../../lib/api'
 
 const mockAudit = {
   audit_id: 'a1b2c3d4',
@@ -51,5 +51,26 @@ describe('fetchAudit', () => {
   it('throws when the audit is not found', async () => {
     global.fetch = mockFetch({ error: 'not found' }, 404) as unknown as typeof fetch
     await expect(fetchAudit('missing', mockCookie)).rejects.toThrow('not found')
+  })
+})
+
+const mockReport = {
+  audit_id: 'a1b2c3d4',
+  format: 'pdf',
+  storage_key: 'reports/a1b2c3d4/geo-report.pdf',
+  public_url: 'https://cdn.example.com/reports/a1b2c3d4/geo-report.pdf',
+}
+
+describe('fetchReport', () => {
+  it('returns report metadata on success', async () => {
+    global.fetch = mockFetch(mockReport) as unknown as typeof fetch
+    const report = await fetchReport('a1b2c3d4', mockCookie)
+    expect(report.format).toBe('pdf')
+    expect(report.public_url).toBe(mockReport.public_url)
+  })
+
+  it('throws when the report is not ready', async () => {
+    global.fetch = mockFetch({ error: 'Report not ready' }, 404) as unknown as typeof fetch
+    await expect(fetchReport('missing', mockCookie)).rejects.toThrow('Report not ready')
   })
 })

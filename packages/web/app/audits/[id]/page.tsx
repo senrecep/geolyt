@@ -1,5 +1,6 @@
 import { fetchAudit } from '@/lib/api'
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Header } from '../../_components/header'
 import { ScoreBadge } from '../../_components/score-badge'
@@ -35,6 +36,14 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
             {audit.completed_at && (
               <span>Completed {new Date(audit.completed_at).toLocaleString()}</span>
             )}
+          </div>
+          <div className="mt-4">
+            <Link
+              href={`/audits/${id}/report`}
+              className="text-sm font-medium text-[var(--color-primary)] hover:underline"
+            >
+              View report →
+            </Link>
           </div>
         </div>
 
