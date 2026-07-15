@@ -1,4 +1,4 @@
-import type { AuditResult } from '@geolyt/shared'
+import type { AuditResult, WhiteLabelConfig } from '@geolyt/shared'
 import { relations } from 'drizzle-orm'
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
@@ -10,6 +10,7 @@ export const clients = pgTable('clients', {
   stripeSubscriptionItemId: text('stripe_subscription_item_id'),
   plan: text('plan').default('free'),
   monthlyQuota: integer('monthly_quota').default(0),
+  whiteLabelConfig: jsonb('white_label_config').$type<WhiteLabelConfig>(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
