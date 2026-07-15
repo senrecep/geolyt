@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import type { AuditResult } from '@geolyt/shared'
+import type { AuditResult, WhiteLabelConfig } from '@geolyt/shared'
 import { buildReportHtml } from '../../templates/report.html.js'
 
 function validAudit(): AuditResult {
@@ -43,5 +43,29 @@ describe('buildReportHtml', () => {
     expect(html).toContain('Missing canonical tag')
     expect(html).toContain('high')
     expect(html).toContain('Add a rel=canonical link.')
+  })
+
+  it('uses default branding when no white-label config is provided', () => {
+    const html = buildReportHtml(validAudit())
+    expect(html).toContain('GEO Audit Report')
+    expect(html).not.toContain('<img')
+  })
+
+  it('applies white-label company name and logo', () => {
+    const config: WhiteLabelConfig = {
+      companyName: 'Agency Inc',
+      logoUrl: 'https://agency.example/logo.png',
+      primaryColor: '#ef4444',
+    }
+    const html = buildReportHtml(validAudit(), config)
+    expect(html).toContain('Agency Inc GEO Audit Report')
+    expect(html).toContain('https://agency.example/logo.png')
+    expect(html).toContain('border-top: 4px solid #ef4444')
+  })
+
+  it('uses the provided primary color for section borders', () => {
+    const config: WhiteLabelConfig = { primaryColor: '#10b981' }
+    const html = buildReportHtml(validAudit(), config)
+    expect(html).toContain('border-bottom: 2px solid #10b981')
   })
 })

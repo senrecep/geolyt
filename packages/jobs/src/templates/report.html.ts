@@ -1,4 +1,4 @@
-import type { AuditResult, Finding } from '@geolyt/shared'
+import type { AuditResult, Finding, WhiteLabelConfig } from '@geolyt/shared'
 
 function severityClass(severity: Finding['severity']): string {
   const map: Record<Finding['severity'], string> = {
@@ -11,21 +11,27 @@ function severityClass(severity: Finding['severity']): string {
   return map[severity]
 }
 
-export function buildReportHtml(audit: AuditResult): string {
+export function buildReportHtml(audit: AuditResult, whiteLabel?: WhiteLabelConfig): string {
+  const primaryColor = whiteLabel?.primaryColor ?? '#3b82f6'
+  const companyName = whiteLabel?.companyName
+  const logoUrl = whiteLabel?.logoUrl
+  const title = companyName ? `${companyName} GEO Audit Report` : 'GEO Audit Report'
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEO Audit Report — ${audit.url}</title>
+  <title>${title} — ${audit.url}</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 40px; color: #111; background: #fff; }
+    .brand-logo { max-height: 48px; margin-bottom: 16px; }
     h1 { font-size: 28px; margin-bottom: 8px; }
-    h2 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid #e5e5e5; padding-bottom: 8px; }
+    h2 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; border-bottom: 2px solid ${primaryColor}; padding-bottom: 8px; }
     .meta { color: #666; margin-bottom: 24px; }
     .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .score-card { border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px; }
+    .score-card { border: 1px solid #e5e5e5; border-top: 4px solid ${primaryColor}; border-radius: 8px; padding: 16px; }
     .score-card .label { font-size: 12px; color: #666; text-transform: uppercase; }
     .score-card .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
     .findings { list-style: none; padding: 0; margin: 0; }
@@ -40,7 +46,8 @@ export function buildReportHtml(audit: AuditResult): string {
   </style>
 </head>
 <body>
-  <h1>GEO Audit Report</h1>
+  ${logoUrl ? `<img src="${logoUrl}" alt="${companyName ?? 'Brand'}" class="brand-logo">` : ''}
+  <h1>${title}</h1>
   <p class="meta">${audit.url} · Generated at ${audit.generatedAt.toISOString()}</p>
 
   <div class="score-grid">
@@ -89,7 +96,7 @@ export function buildReportHtml(audit: AuditResult): string {
   </ul>
 
   <footer>
-    AI synthesis ${audit.aiSynthesisUsed ? 'used' : 'not used'} · Report ID ${audit.auditId}
+    ${companyName ? `${companyName} · ` : ''}AI synthesis ${audit.aiSynthesisUsed ? 'used' : 'not used'} · Report ID ${audit.auditId}
   </footer>
 </body>
 </html>`
