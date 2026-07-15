@@ -15,21 +15,25 @@ export async function enqueueAudit(input: AuditFlowInput): Promise<void> {
     name: 'report',
     queueName: QUEUE_NAMES.report,
     data: input,
+    opts: { jobId: input.auditId },
     children: [
       {
         name: 'synthesize',
         queueName: QUEUE_NAMES.synthesize,
         data: input,
+        opts: { jobId: input.auditId },
         children: [
           {
             name: 'score',
             queueName: QUEUE_NAMES.score,
             data: input,
+            opts: { jobId: input.auditId },
             children: [
               {
                 name: 'collect',
                 queueName: QUEUE_NAMES.collect,
                 data: input,
+                opts: { jobId: input.auditId },
               },
             ],
           },
