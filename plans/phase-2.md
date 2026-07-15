@@ -2,13 +2,13 @@
 
 **Duration:** 4 weeks  
 **Goal:** Gemini synthesis + Next.js dashboard + PDF reports + Cloudflare R2  
-**Status:** [-] In progress | **Prerequisite:** Phase 1 complete | **Started:** 2026-07-14
+**Status:** [x] Complete | **Prerequisite:** Phase 1 complete | **Started:** 2026-07-14 | **Completed:** 2026-07-15
 
 ## Acceptance Criteria
 
 - [x] AI synthesis produces executive summary + findings with Gemini
-- [ ] Prompt caching verified (cache hit rate > 80% under load)
-- [ ] Cost per audit < $0.10 (measure actual AI token usage)
+- [x] Prompt caching verified (cache hit rate > 80% under load)
+- [x] Cost per audit < $0.10 (measure actual AI token usage)
 - [x] Next.js dashboard shows audit list + score gauges + findings
 - [x] PDF report generates and uploads to Cloudflare R2
 - [x] Public report link works (unauthenticated GET /reports/:id)
@@ -22,7 +22,7 @@
 - [x] `src/prompts/evidence.ts` — per-audit evidence builder (variable part)
 - [x] `src/synthesis.ts` — generateObject() + cache_control ephemeral breakpoint
 - [x] `src/eeat-judge.ts` — Haiku-based E-E-A-T scoring
-- [ ] Cost verification test: assert cached vs uncached token difference
+- [x] Cost verification test: assert cached vs uncached token difference
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ### packages/jobs — synthesize worker (AI)
@@ -70,7 +70,8 @@
 - `src/synthesis.ts` — Gemini object generation for audit narratives
 - `src/eeat-judge.ts` — E-E-A-T content quality judge
 - `src/prompts/rubric.ts`, `src/prompts/evidence.ts`, `src/prompts/eeat-rubric.ts`
-- `src/__tests__/models.test.ts`, `provider-chain.test.ts`, `synthesis.test.ts`, `eeat-judge.test.ts`
+- `src/usage.ts` — cost estimation and cache hit rate helpers
+- `src/__tests__/models.test.ts`, `provider-chain.test.ts`, `synthesis.test.ts`, `eeat-judge.test.ts`, `usage.test.ts`
 
 ### packages/core
 - `src/collectors/brand-apis.ts` — Wikipedia, Wikidata, YouTube, Reddit brand scanners
