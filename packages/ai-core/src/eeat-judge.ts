@@ -22,16 +22,16 @@ const EeatOutputSchema = z.object({
 
 export type EeatOutput = z.infer<typeof EeatOutputSchema>
 
-export interface GenerateObjectArgs {
+export interface EeatGenerateObjectArgs {
   model: LanguageModel
   system: string
   prompt: string
   schema: typeof EeatOutputSchema
 }
 
-export type GenerateObjectFn = (args: GenerateObjectArgs) => Promise<{ object: EeatOutput }>
+export type EeatGenerateObjectFn = (args: EeatGenerateObjectArgs) => Promise<{ object: EeatOutput }>
 
-async function defaultGenerate(args: GenerateObjectArgs): Promise<{ object: EeatOutput }> {
+async function defaultGenerate(args: EeatGenerateObjectArgs): Promise<{ object: EeatOutput }> {
   const { generateObject } = await import('ai')
   return generateObject({
     model: args.model,
@@ -62,7 +62,7 @@ function buildEeatPrompt(pageData: PageData): string {
 export async function judgeEeat(
   pageData: PageData,
   model: LanguageModel,
-  generate: GenerateObjectFn = defaultGenerate,
+  generate: EeatGenerateObjectFn = defaultGenerate,
 ): Promise<Result<EeatOutput>> {
   try {
     const { object } = await generate({

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import type { PageData } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Result } from 'tsentials/result'
-import { type EeatOutput, type GenerateObjectArgs, judgeEeat } from '../eeat-judge.js'
+import { type EeatGenerateObjectArgs, type EeatOutput, judgeEeat } from '../eeat-judge.js'
 
 const fakeModel = { modelId: 'claude-haiku-test' } as unknown as LanguageModel
 
@@ -36,7 +36,7 @@ function validPageData(): PageData {
 }
 
 function fakeGenerate(object: EeatOutput) {
-  return async (_args: GenerateObjectArgs): Promise<{ object: EeatOutput }> => {
+  return async (_args: EeatGenerateObjectArgs): Promise<{ object: EeatOutput }> => {
     return { object }
   }
 }
@@ -65,7 +65,9 @@ describe('judgeEeat', () => {
   })
 
   it('returns a failure when generation throws', async () => {
-    const failingGenerate = async (_args: GenerateObjectArgs): Promise<{ object: EeatOutput }> => {
+    const failingGenerate = async (
+      _args: EeatGenerateObjectArgs,
+    ): Promise<{ object: EeatOutput }> => {
       throw new Error('rate limited')
     }
 

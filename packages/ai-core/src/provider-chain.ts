@@ -1,8 +1,8 @@
 import type { LanguageModel } from 'ai'
-import type { Redis } from 'ioredis'
+import { Redis, type RedisOptions } from 'ioredis'
 
 export interface ModelChainOptions {
-  redis?: Redis
+  redis?: Redis | RedisOptions
   windowMs?: number
   maxFailures?: number
 }
@@ -24,7 +24,12 @@ export class ModelChain {
 
   constructor(models: LanguageModel[], options: ModelChainOptions = {}) {
     this.models = models
-    this.redis = options.redis
+    this.redis =
+      options.redis === undefined
+        ? undefined
+        : options.redis instanceof Redis
+          ? options.redis
+          : new Redis(options.redis)
     this.windowMs = options.windowMs ?? 300_000
     this.maxFailures = options.maxFailures ?? 3
   }
