@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { fetchAudit, fetchAudits, fetchReport } from '../../../lib/api'
+import { fetchAudit, fetchAudits, fetchClient, fetchReport } from '../../../lib/api'
 
 const mockAudit = {
   audit_id: 'a1b2c3d4',
@@ -60,6 +60,29 @@ const mockReport = {
   storage_key: 'reports/a1b2c3d4/geo-report.pdf',
   public_url: 'https://cdn.example.com/reports/a1b2c3d4/geo-report.pdf',
 }
+
+const mockClient = {
+  id: 'client-1',
+  name: 'Agency Inc',
+  email: 'agency@example.com',
+  plan: 'pro',
+  monthly_quota: 100,
+  white_label_config: { companyName: 'Agency Inc', primaryColor: '#ef4444' },
+}
+
+describe('fetchClient', () => {
+  it('returns client info with white-label config on success', async () => {
+    global.fetch = mockFetch(mockClient) as unknown as typeof fetch
+    const client = await fetchClient(mockCookie)
+    expect(client.id).toBe('client-1')
+    expect(client.white_label_config?.companyName).toBe('Agency Inc')
+  })
+
+  it('throws when the API returns an error', async () => {
+    global.fetch = mockFetch({ error: 'Unauthorized' }, 401) as unknown as typeof fetch
+    await expect(fetchClient(mockCookie)).rejects.toThrow('Unauthorized')
+  })
+})
 
 describe('fetchReport', () => {
   it('returns report metadata on success', async () => {
