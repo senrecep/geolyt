@@ -1,6 +1,7 @@
+import { judgeEeat, scoringModels } from '@geolyt/ai-core'
 import { computeCompositeScore, scoreAll, scoreBrandAuthority } from '@geolyt/core'
 import { audits, db } from '@geolyt/db'
-import type { PageData, ScoreResult } from '@geolyt/shared'
+import type { Finding, PageData, ScoreResult } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { aiRedisConnection, redisConnection } from '../connection.js'
@@ -42,9 +43,44 @@ export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
     const brandAuthority = brandResult.ok ? brandResult.value.score : 0
     const brandFindings = brandResult.ok ? brandResult.value.findings : []
 
+    const contentFindings: Finding[] = []
+    let contentQuality = 0
+    if (process.env.GOOGLE_AI_API_KEY) {
+      const [eeatModel] = scoringModels()
+      if (eeatModel) {
+        const eeatResult = await judgeEeat(pageData, eeatModel)
+        if (eeatResult.ok) {
+          contentQuality = eeatResult.value.score
+          contentFindings.push(...eeatResult.value.findings)
+        } else {
+          contentFindings.push({
+            code: 'AI.EeatJudgeFailed',
+            title: 'E-E-A-T judge unavailable',
+            description: eeatResult.errors.map((e) => e.description).join(', '),
+            severity: 'medium',
+          })
+        }
+      } else {
+        contentFindings.push({
+          code: 'AI.EeatModelMissing',
+          title: 'No E-E-A-T model available',
+          description: 'No scoring model configured for content quality.',
+          severity: 'low',
+        })
+      }
+    } else {
+      contentFindings.push({
+        code: 'AI.EeatKeyMissing',
+        title: 'E-E-A-T scoring skipped',
+        description: 'GOOGLE_AI_API_KEY is not configured; content quality defaulted to 0.',
+        severity: 'low',
+      })
+    }
+
     const recomposite = computeCompositeScore({
       ...baseResult.value.scores,
       brandAuthority,
+      contentQuality,
     })
     if (!recomposite.ok) {
       await db
@@ -56,7 +92,7 @@ export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
 
     const result: ScoreResult = {
       scores: recomposite.value,
-      findings: [...baseResult.value.findings, ...brandFindings],
+      findings: [...baseResult.value.findings, ...brandFindings, ...contentFindings],
       crawlerAccess: baseResult.value.crawlerAccess,
     }
 
