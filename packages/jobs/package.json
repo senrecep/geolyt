@@ -9,6 +9,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@geolyt/ai-core": "workspace:*",
     "@geolyt/core": "workspace:*",
     "@geolyt/db": "workspace:*",
     "@geolyt/shared": "workspace:*",

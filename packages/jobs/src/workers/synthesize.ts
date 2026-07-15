@@ -1,8 +1,9 @@
+import { ModelChain, narrativeModels, synthesize } from '@geolyt/ai-core'
 import { auditResults, audits, db } from '@geolyt/db'
-import type { AuditResult, ScoreResult } from '@geolyt/shared'
+import type { AuditResult, Finding, ScoreResult } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
-import { redisConnection } from '../connection.js'
+import { aiRedisConnection, redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
 import { QUEUE_NAMES } from '../queues.js'
 
@@ -19,6 +20,18 @@ function buildAuditResult(input: AuditFlowInput, scoreResult: ScoreResult): Audi
   }
 }
 
+function mergeFindings(original: Finding[], ai: Finding[]): Finding[] {
+  const seen = new Set(original.map((f) => f.code))
+  const merged = [...original]
+  for (const finding of ai) {
+    if (!seen.has(finding.code)) {
+      merged.push(finding)
+      seen.add(finding.code)
+    }
+  }
+  return merged
+}
+
 export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
   QUEUE_NAMES.synthesize,
   async (job) => {
@@ -32,7 +45,26 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
       throw new Error('Missing score result')
     }
 
-    const auditResult = buildAuditResult(job.data, scoreResult)
+    let auditResult = buildAuditResult(job.data, scoreResult)
+
+    try {
+      const chain = new ModelChain(narrativeModels(), { redis: aiRedisConnection })
+      const model = await chain.pickModel()
+
+      if (model) {
+        const synthesis = await synthesize(auditResult, model)
+
+        if (synthesis.ok) {
+          auditResult = {
+            ...auditResult,
+            findings: mergeFindings(auditResult.findings, synthesis.value.findings),
+            aiSynthesisUsed: true,
+          }
+        }
+      }
+    } catch {
+      // AI synthesis is optional; fall back to the template result.
+    }
 
     await db.insert(auditResults).values({
       auditId,
