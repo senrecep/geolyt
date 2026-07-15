@@ -9,11 +9,11 @@
 |---|---|---|---|---|
 | Phase 1 — Core Engine | [x] Complete | 2026-07-14 | 2026-07-14 | Kimi Code CLI |
 | Phase 2 — AI + Dashboard | [x] Complete | 2026-07-14 | 2026-07-15 | Kimi Code CLI |
-| Phase 3 — Production | [ ] Not started | — | — | — |
+| Phase 3 — Production | [-] In progress | 2026-07-15 | — | Kimi Code CLI |
 
 ## Active Task
 
-Plan and start Phase 3 — Production: deployment, observability, security hardening, billing, and white-label features.
+Phase 3 — Production: continue security hardening and move into billing/Stripe metered billing integration.
 
 ## Session Log
 
@@ -25,6 +25,7 @@ Plan and start Phase 3 — Production: deployment, observability, security harde
 | 2026-07-14 | Phase 2 auth wiring | Protected /audits with API-key-or-better-auth-session; switched web client, server actions, and tests from API key to session cookies | Kimi Code CLI | packages/api/src/routes/audits.ts, packages/web/app/page.tsx, packages/web/app/audits/[id]/page.tsx, packages/web/lib/api.ts, packages/web/app/_actions/submit-audit.ts, packages/web/src/__tests__/lib/api.test.ts, packages/web/src/__tests__/actions/submit-audit.test.ts, bun.lock |
 | 2026-07-14 | Phase 2 reports + SSE | Added public report link endpoint (GET /reports/:id), report viewer page, fetchReport helper, SSE progress stream endpoint, AuditProgress component wired to submit form and detail page; keyed BullMQ flow jobs by audit id | Kimi Code CLI | packages/api/src/routes/reports.ts, packages/api/src/routes/audits.ts, packages/api/src/index.ts, packages/web/app/audits/[id]/report/page.tsx, packages/web/app/_components/audit-progress.tsx, packages/web/app/_components/submit-form.tsx, packages/web/app/audits/[id]/page.tsx, packages/jobs/src/flow.ts, packages/web/lib/api.ts, related tests |
 | 2026-07-15 | Phase 2 cost/cache verification + wrap-up | Added AiUsage type, usage capture in synthesis/eeat-judge, cost estimation and cache hit rate helpers, usage recording in synthesize worker; marked Phase 2 complete | Kimi Code CLI | packages/shared/src/schemas/ai-usage.ts, packages/ai-core/src/usage.ts, packages/ai-core/src/synthesis.ts, packages/ai-core/src/eeat-judge.ts, packages/jobs/src/workers/synthesize.ts, packages/jobs/src/workers/score.ts, related tests, plans/* |
+| 2026-07-15 | Phase 3 security hardening start | Added GEO.RedirectBlocked error, blocked cross-domain and private redirect targets in fetchHtml, added per-domain Redis token bucket rate limiter to collect worker | Kimi Code CLI | packages/shared/src/errors/geo-errors.ts, packages/core/src/collectors/fetch-html.ts, packages/core/src/__tests__/collectors/fetch-html.test.ts, packages/jobs/src/rate-limit.ts, packages/jobs/src/__tests__/rate-limit.test.ts, packages/jobs/src/workers/collect.ts, plans/* |
 
 ## Quick Commands
 

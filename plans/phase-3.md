@@ -2,7 +2,7 @@
 
 **Duration:** 8 weeks  
 **Goal:** White-label + billing + monthly deltas + public report links + hardening  
-**Status:** 🔴 Not started | **Prerequisite:** Phase 2 complete
+**Status:** [-] In progress | **Prerequisite:** Phase 2 complete | **Started:** 2026-07-15
 
 ## Acceptance Criteria
 
@@ -10,8 +10,8 @@
 - [ ] Stripe metered billing charges per audit
 - [ ] Monthly delta reports show score change vs previous audit
 - [ ] Public shareable report link works as lead-gen
-- [ ] SSRF protection blocks private IP ranges
-- [ ] Per-domain rate limiting enforced (no IP ban risk)
+- [x] SSRF protection blocks private IP ranges
+- [x] Per-domain rate limiting enforced (no IP ban risk)
 
 ## Tasks
 
@@ -42,9 +42,9 @@
 - **Owner:** — | **Date:** —
 
 ### Security hardening
-- [ ] SSRF: block 10.x, 172.16.x, 192.168.x, 127.x in collectPage()
-- [ ] Redirect validation: target must stay on same domain
-- [ ] Per-domain rate limiter (Redis token bucket, 1 req/sec)
+- [x] SSRF: block 10.x, 172.16.x, 192.168.x, 127.x in collectPage()
+- [x] Redirect validation: target must stay on same domain
+- [x] Per-domain rate limiter (Redis token bucket, 1 req/sec)
 - [ ] Secret scan pre-commit hook (grep for API keys in staged files)
 - **Owner:** — | **Date:** —
 
