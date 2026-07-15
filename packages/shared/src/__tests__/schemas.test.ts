@@ -8,6 +8,7 @@ import {
   type GeoScores,
 } from '../schemas/audit-result.js'
 import { ContentBlock, PageData } from '../schemas/page-data.js'
+import { WhiteLabelConfig } from '../schemas/white-label.js'
 
 const validGeoScores: GeoScores = {
   aiCitability: 25,
@@ -129,5 +130,30 @@ describe('AuditStatus schema', () => {
 
   it('rejects invalid status', () => {
     expect(() => AuditStatus.parse('archived')).toThrow()
+  })
+})
+
+describe('WhiteLabelConfig schema', () => {
+  it('accepts a full config', () => {
+    expect(() =>
+      WhiteLabelConfig.parse({
+        companyName: 'Agency Inc',
+        logoUrl: 'https://agency.example/logo.png',
+        faviconUrl: 'https://agency.example/favicon.ico',
+        primaryColor: '#3b82f6',
+      }),
+    ).not.toThrow()
+  })
+
+  it('accepts an empty config', () => {
+    expect(() => WhiteLabelConfig.parse({})).not.toThrow()
+  })
+
+  it('rejects an invalid hex color', () => {
+    expect(() => WhiteLabelConfig.parse({ primaryColor: 'blue' })).toThrow()
+  })
+
+  it('rejects a malformed logo url', () => {
+    expect(() => WhiteLabelConfig.parse({ logoUrl: 'not-a-url' })).toThrow()
   })
 })
