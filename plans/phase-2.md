@@ -11,7 +11,7 @@
 - [ ] Cost per audit < $0.10 (measure actual AI token usage)
 - [x] Next.js dashboard shows audit list + score gauges + findings
 - [x] PDF report generates and uploads to Cloudflare R2
-- [ ] Public report link works (unauthenticated GET /reports/:id)
+- [x] Public report link works (unauthenticated GET /reports/:id)
 
 ## Tasks
 
@@ -50,8 +50,8 @@
 - [x] Dashboard: audit list with GEO scores + status badges
 - [x] Audit detail: score breakdown gauges, findings list, crawler access table
 - [x] Submit URL form → POST /audits
-- [ ] Report viewer: embedded PDF + markdown toggle
-- [ ] Progress polling or SSE for submitted audits
+- [x] Report viewer: embedded PDF + markdown toggle
+- [x] Progress polling or SSE for submitted audits
 - [x] better-auth backend integration on the API (sessions for dashboard routes)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
