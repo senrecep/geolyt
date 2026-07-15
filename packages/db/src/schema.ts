@@ -7,6 +7,7 @@ export const clients = pgTable('clients', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
   stripeSubscriptionItemId: text('stripe_subscription_item_id'),
   plan: text('plan').default('free'),
   monthlyQuota: integer('monthly_quota').default(0),
