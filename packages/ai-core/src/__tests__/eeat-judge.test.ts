@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import type { PageData } from '@geolyt/shared'
+import type { AiUsage, PageData } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Result } from 'tsentials/result'
 import { type EeatGenerateObjectArgs, type EeatOutput, judgeEeat } from '../eeat-judge.js'
@@ -36,8 +36,11 @@ function validPageData(): PageData {
 }
 
 function fakeGenerate(object: EeatOutput) {
-  return async (_args: EeatGenerateObjectArgs): Promise<{ object: EeatOutput }> => {
-    return { object }
+  return async (_args: EeatGenerateObjectArgs): Promise<{ object: EeatOutput; usage: AiUsage }> => {
+    return {
+      object,
+      usage: { promptTokens: 2_000, completionTokens: 300, cachedPromptTokens: 1_500 },
+    }
   }
 }
 
@@ -60,14 +63,14 @@ describe('judgeEeat', () => {
     if (!Result.isSuccess(result)) {
       throw new Error('expected E-E-A-T judge to succeed')
     }
-    expect(result.value.score).toBe(72)
-    expect(result.value.findings[0]?.code).toBe('EEAT.NoAuthorBio')
+    expect(result.value.output.score).toBe(72)
+    expect(result.value.output.findings[0]?.code).toBe('EEAT.NoAuthorBio')
   })
 
   it('returns a failure when generation throws', async () => {
     const failingGenerate = async (
       _args: EeatGenerateObjectArgs,
-    ): Promise<{ object: EeatOutput }> => {
+    ): Promise<{ object: EeatOutput; usage: AiUsage }> => {
       throw new Error('rate limited')
     }
 

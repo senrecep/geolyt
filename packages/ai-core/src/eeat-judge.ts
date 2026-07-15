@@ -1,4 +1,4 @@
-import type { Finding, PageData } from '@geolyt/shared'
+import type { AiUsage, Finding, PageData } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Err } from 'tsentials/errors'
 import { Result } from 'tsentials/result'
@@ -29,16 +29,29 @@ export interface EeatGenerateObjectArgs {
   schema: typeof EeatOutputSchema
 }
 
-export type EeatGenerateObjectFn = (args: EeatGenerateObjectArgs) => Promise<{ object: EeatOutput }>
+export type EeatGenerateObjectFn = (args: EeatGenerateObjectArgs) => Promise<{
+  object: EeatOutput
+  usage: AiUsage
+}>
 
-async function defaultGenerate(args: EeatGenerateObjectArgs): Promise<{ object: EeatOutput }> {
+async function defaultGenerate(
+  args: EeatGenerateObjectArgs,
+): Promise<{ object: EeatOutput; usage: AiUsage }> {
   const { generateObject } = await import('ai')
-  return generateObject({
+  const { object, usage } = await generateObject({
     model: args.model,
     system: args.system,
     prompt: args.prompt,
     schema: args.schema,
   })
+  return {
+    object,
+    usage: {
+      promptTokens: usage.promptTokens,
+      completionTokens: usage.completionTokens,
+      cachedPromptTokens: 0,
+    },
+  }
 }
 
 function buildEeatPrompt(pageData: PageData): string {
@@ -59,19 +72,24 @@ function buildEeatPrompt(pageData: PageData): string {
   return lines.join('\n')
 }
 
+export type EeatJudgeResult = {
+  output: EeatOutput
+  usage: AiUsage
+}
+
 export async function judgeEeat(
   pageData: PageData,
   model: LanguageModel,
   generate: EeatGenerateObjectFn = defaultGenerate,
-): Promise<Result<EeatOutput>> {
+): Promise<Result<EeatJudgeResult>> {
   try {
-    const { object } = await generate({
+    const { object, usage } = await generate({
       model,
       system: eeatRubric,
       prompt: buildEeatPrompt(pageData),
       schema: EeatOutputSchema,
     })
-    return Result.success(object)
+    return Result.success({ output: object, usage })
   } catch (error) {
     return Result.failure(
       Err.unexpected(

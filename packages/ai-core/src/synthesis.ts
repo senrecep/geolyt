@@ -1,4 +1,4 @@
-import type { AuditResult, Finding } from '@geolyt/shared'
+import type { AiUsage, AuditResult, Finding } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Err } from 'tsentials/errors'
 import { Result } from 'tsentials/result'
@@ -31,31 +31,49 @@ export interface GenerateObjectArgs {
   schema: typeof SynthesisOutputSchema
 }
 
-export type GenerateObjectFn = (args: GenerateObjectArgs) => Promise<{ object: SynthesisOutput }>
+export type GenerateObjectFn = (args: GenerateObjectArgs) => Promise<{
+  object: SynthesisOutput
+  usage: AiUsage
+}>
 
-async function defaultGenerate(args: GenerateObjectArgs): Promise<{ object: SynthesisOutput }> {
+async function defaultGenerate(
+  args: GenerateObjectArgs,
+): Promise<{ object: SynthesisOutput; usage: AiUsage }> {
   const { generateObject } = await import('ai')
-  return generateObject({
+  const { object, usage } = await generateObject({
     model: args.model,
     system: args.system,
     prompt: args.prompt,
     schema: args.schema,
   })
+  return {
+    object,
+    usage: {
+      promptTokens: usage.promptTokens,
+      completionTokens: usage.completionTokens,
+      cachedPromptTokens: 0,
+    },
+  }
+}
+
+export type SynthesisResult = {
+  output: SynthesisOutput
+  usage: AiUsage
 }
 
 export async function synthesize(
   audit: AuditResult,
   model: LanguageModel,
   generate: GenerateObjectFn = defaultGenerate,
-): Promise<Result<SynthesisOutput>> {
+): Promise<Result<SynthesisResult>> {
   try {
-    const { object } = await generate({
+    const { object, usage } = await generate({
       model,
       system: geoRubric,
       prompt: buildEvidence(audit),
       schema: SynthesisOutputSchema,
     })
-    return Result.success(object)
+    return Result.success({ output: object, usage })
   } catch (error) {
     return Result.failure(
       Err.unexpected(

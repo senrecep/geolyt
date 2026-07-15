@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import type { AuditResult } from '@geolyt/shared'
+import type { AiUsage, AuditResult } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Result } from 'tsentials/result'
 import { type GenerateObjectArgs, type SynthesisOutput, synthesize } from '../synthesis.js'
@@ -39,8 +39,13 @@ function validAudit(): AuditResult {
 }
 
 function fakeGenerate(object: SynthesisOutput) {
-  return async (_args: GenerateObjectArgs): Promise<{ object: SynthesisOutput }> => {
-    return { object }
+  return async (
+    _args: GenerateObjectArgs,
+  ): Promise<{ object: SynthesisOutput; usage: AiUsage }> => {
+    return {
+      object,
+      usage: { promptTokens: 6_000, completionTokens: 800, cachedPromptTokens: 5_500 },
+    }
   }
 }
 
@@ -64,14 +69,14 @@ describe('synthesize', () => {
     if (!Result.isSuccess(result)) {
       throw new Error('expected synthesis to succeed')
     }
-    expect(result.value.executiveSummary).toBe(output.executiveSummary)
-    expect(result.value.aiSynthesisUsed).toBe(true)
+    expect(result.value.output.executiveSummary).toBe(output.executiveSummary)
+    expect(result.value.output.aiSynthesisUsed).toBe(true)
   })
 
   it('returns a failure when generation throws', async () => {
     const failingGenerate = async (
       _args: GenerateObjectArgs,
-    ): Promise<{ object: SynthesisOutput }> => {
+    ): Promise<{ object: SynthesisOutput; usage: AiUsage }> => {
       throw new Error('model refused')
     }
 
