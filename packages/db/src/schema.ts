@@ -1,4 +1,4 @@
-import type { AuditResult, WhiteLabelConfig } from '@geolyt/shared'
+import type { AuditResult, ScoreChange, WhiteLabelConfig } from '@geolyt/shared'
 import { relations } from 'drizzle-orm'
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
@@ -54,6 +54,25 @@ export const auditResults = pgTable('audit_results', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const auditDeltas = pgTable(
+  'audit_deltas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    siteId: uuid('site_id')
+      .references(() => sites.id)
+      .notNull(),
+    auditAId: uuid('audit_a_id')
+      .references(() => audits.id)
+      .notNull(),
+    auditBId: uuid('audit_b_id')
+      .references(() => audits.id)
+      .notNull(),
+    scoreChange: jsonb('score_change').$type<ScoreChange>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('audit_delta_site_idx').on(table.siteId)],
+)
+
 export const reports = pgTable('reports', {
   id: uuid('id').primaryKey().defaultRandom(),
   auditId: uuid('audit_id')
@@ -104,10 +123,11 @@ export const clientsRelations = relations(clients, ({ many }) => ({
 export const sitesRelations = relations(sites, ({ one, many }) => ({
   client: one(clients, { fields: [sites.clientId], references: [clients.id] }),
   audits: many(audits),
+  deltas: many(auditDeltas),
 }))
 
 export const auditsRelations = relations(audits, ({ one, many }) => ({
   site: one(sites, { fields: [audits.siteId], references: [sites.id] }),
-  result: one(auditResults),
+  result: one(auditResults, { fields: [audits.id], references: [auditResults.auditId] }),
   reports: many(reports),
 }))
