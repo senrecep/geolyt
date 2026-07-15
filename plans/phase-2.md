@@ -21,7 +21,7 @@
 - [x] `src/prompts/rubric.ts` — ~6k token cached GEO rubric (static, all audits)
 - [x] `src/prompts/evidence.ts` — per-audit evidence builder (variable part)
 - [x] `src/synthesis.ts` — generateObject() + cache_control ephemeral breakpoint
-- [ ] `src/eeat-judge.ts` — Haiku-based E-E-A-T scoring
+- [x] `src/eeat-judge.ts` — Haiku-based E-E-A-T scoring
 - [ ] Cost verification test: assert cached vs uncached token difference
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
