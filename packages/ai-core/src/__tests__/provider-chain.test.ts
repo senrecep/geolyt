@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test'
 import type { LanguageModel } from 'ai'
-import type { Redis } from 'ioredis'
 import { ModelChain } from '../provider-chain.js'
 
 class FakeRedis {
@@ -33,7 +32,7 @@ describe('ModelChain', () => {
   })
 
   it('skips a model that has recent failures in redis', async () => {
-    const redis = new FakeRedis() as unknown as Redis
+    const redis = new FakeRedis()
     const chain = new ModelChain(models, { redis, windowMs: 60_000, maxFailures: 2 })
 
     await chain.recordFailure('gemini-primary')
@@ -44,7 +43,7 @@ describe('ModelChain', () => {
   })
 
   it('returns null when every model is unhealthy', async () => {
-    const redis = new FakeRedis() as unknown as Redis
+    const redis = new FakeRedis()
     const chain = new ModelChain(models, { redis, windowMs: 60_000, maxFailures: 1 })
 
     for (const model of models) {
@@ -56,7 +55,7 @@ describe('ModelChain', () => {
   })
 
   it('resumes using a model after its failure window passes', async () => {
-    const redis = new FakeRedis() as unknown as Redis
+    const redis = new FakeRedis()
     const chain = new ModelChain(models, { redis, windowMs: 1, maxFailures: 1 })
 
     await chain.recordFailure('gemini-primary')

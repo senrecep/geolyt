@@ -1,8 +1,12 @@
 import type { LanguageModel } from 'ai'
-import { Redis, type RedisOptions } from 'ioredis'
+
+export interface RedisLike {
+  get(key: string): Promise<string | null>
+  set(key: string, value: string, ...args: (string | number)[]): Promise<unknown>
+}
 
 export interface ModelChainOptions {
-  redis?: Redis | RedisOptions
+  redis?: RedisLike
   windowMs?: number
   maxFailures?: number
 }
@@ -18,18 +22,13 @@ function healthKey(modelId: string): string {
 
 export class ModelChain {
   private readonly models: LanguageModel[]
-  private readonly redis: Redis | undefined
+  private readonly redis: RedisLike | undefined
   private readonly windowMs: number
   private readonly maxFailures: number
 
   constructor(models: LanguageModel[], options: ModelChainOptions = {}) {
     this.models = models
-    this.redis =
-      options.redis === undefined
-        ? undefined
-        : options.redis instanceof Redis
-          ? options.redis
-          : new Redis(options.redis)
+    this.redis = options.redis
     this.windowMs = options.windowMs ?? 300_000
     this.maxFailures = options.maxFailures ?? 3
   }

@@ -1,4 +1,4 @@
-import { ModelChain, narrativeModels, synthesize } from '@geolyt/ai-core'
+import { ModelChain, type RedisLike, narrativeModels, synthesize } from '@geolyt/ai-core'
 import { auditResults, audits, db } from '@geolyt/db'
 import type { AuditResult, Finding, ScoreResult } from '@geolyt/shared'
 import { Worker } from 'bullmq'
@@ -48,7 +48,9 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
     let auditResult = buildAuditResult(job.data, scoreResult)
 
     try {
-      const chain = new ModelChain(narrativeModels(), { redis: aiRedisConnection })
+      const chain = new ModelChain(narrativeModels(), {
+        redis: aiRedisConnection as unknown as RedisLike,
+      })
       const model = await chain.pickModel()
 
       if (model) {
