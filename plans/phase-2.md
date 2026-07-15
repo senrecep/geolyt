@@ -47,11 +47,11 @@
 - **Owner:** — | **Date:** —
 
 ### Brand mention APIs (packages/core)
-- [ ] `src/collectors/brand-apis.ts` — Wikipedia API + Wikidata API (real calls)
+- [x] `src/collectors/brand-apis.ts` — Wikipedia API + Wikidata API (real calls)
 - [ ] YouTube Data API v3 (replace stub implementation)
 - [ ] Reddit JSON API (replace stub)
-- [ ] Redis cache (7-day TTL, brand data changes slowly)
-- **Owner:** — | **Date:** —
+- [x] Redis cache (7-day TTL, brand data changes slowly)
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 ## Files Created This Phase
 
