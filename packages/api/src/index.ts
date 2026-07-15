@@ -2,6 +2,7 @@ import swagger from '@elysiajs/swagger'
 import { Elysia } from 'elysia'
 import { auth } from './auth.js'
 import { auditsRoute } from './routes/audits.js'
+import { clientsRoute } from './routes/clients.js'
 import { healthRoute } from './routes/health.js'
 import { reportsRoute } from './routes/reports.js'
 
@@ -12,6 +13,7 @@ export function createApp() {
     .all('/api/auth/*', async ({ request }) => auth.handler(request))
     .use(auditsRoute)
     .use(reportsRoute)
+    .use(clientsRoute)
     .onError(({ code, error, set }) => {
       set.status = code === 'NOT_FOUND' ? 404 : 500
       return {

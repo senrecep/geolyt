@@ -95,4 +95,52 @@ describe('API routes', () => {
     )
     expect(response.status).toBe(429)
   })
+
+  it('GET /clients/me returns the authenticated client', async () => {
+    const response = await app.fetch(
+      new Request('http://localhost/clients/me', {
+        headers: { 'x-api-key': API_KEY },
+      }),
+    )
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { id: string; email: string }
+    expect(body.id).toBe(clientId)
+    expect(body.email).toBe('test@example.com')
+  })
+
+  it('PATCH /clients/me/white-label updates branding config', async () => {
+    const response = await app.fetch(
+      new Request('http://localhost/clients/me/white-label', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        body: JSON.stringify({
+          companyName: 'Agency Inc',
+          logoUrl: 'https://agency.example/logo.png',
+          primaryColor: '#ef4444',
+        }),
+      }),
+    )
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { white_label_config: { companyName: string } }
+    expect(body.white_label_config.companyName).toBe('Agency Inc')
+
+    const getResponse = await app.fetch(
+      new Request('http://localhost/clients/me', {
+        headers: { 'x-api-key': API_KEY },
+      }),
+    )
+    const getBody = (await getResponse.json()) as { white_label_config: { primaryColor: string } }
+    expect(getBody.white_label_config.primaryColor).toBe('#ef4444')
+  })
+
+  it('PATCH /clients/me/white-label rejects an invalid hex color', async () => {
+    const response = await app.fetch(
+      new Request('http://localhost/clients/me/white-label', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        body: JSON.stringify({ primaryColor: 'red' }),
+      }),
+    )
+    expect(response.status).toBe(400)
+  })
 })
