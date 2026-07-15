@@ -1,7 +1,7 @@
 import { fetchReport } from '@/lib/api'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Header } from '../../_components/header'
+import { Header } from '../../../_components/header'
 
 interface ReportPageProps {
   params: Promise<{ id: string }>

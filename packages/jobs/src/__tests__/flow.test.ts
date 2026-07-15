@@ -13,7 +13,7 @@ describe('enqueueAudit', () => {
   async function removeIfExists(id: string): Promise<void> {
     try {
       const existing = await reportQueue.getJob(id)
-      if (existing) await existing.remove(true)
+      if (existing) await existing.remove({ removeChildren: true })
     } catch {
       // The job may be locked by an unfinished child; ignore cleanup failures.
     }

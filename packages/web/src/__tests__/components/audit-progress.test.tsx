@@ -4,22 +4,28 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { render, waitFor } from '@testing-library/react'
 import { AuditProgress } from '../../../app/_components/audit-progress'
 
+class MockEventSource {
+  url: string
+  onmessage: ((event: MessageEvent) => void) | null = null
+  onerror: (() => void) | null = null
+
+  constructor(url: string) {
+    this.url = url
+  }
+
+  close() {}
+}
+
 describe('AuditProgress', () => {
   let lastSource: MockEventSource | null = null
 
   beforeEach(() => {
     lastSource = null
-    global.EventSource = class MockEventSource {
-      url: string
-      onmessage: ((event: MessageEvent) => void) | null = null
-      onerror: (() => void) | null = null
-
+    global.EventSource = class extends MockEventSource {
       constructor(url: string) {
-        this.url = url
+        super(url)
         lastSource = this
       }
-
-      close() {}
     } as unknown as typeof EventSource
   })
 
