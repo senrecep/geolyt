@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 3 — Production: implement Stripe metered billing, usage tracking, and quota enforcement.
+Phase 3 — Production: implement observability (OpenTelemetry traces and cost dashboard).
 
 ## Session Log
 
@@ -27,6 +27,11 @@ Phase 3 — Production: implement Stripe metered billing, usage tracking, and qu
 | 2026-07-15 | Phase 2 cost/cache verification + wrap-up | Added AiUsage type, usage capture in synthesis/eeat-judge, cost estimation and cache hit rate helpers, usage recording in synthesize worker; marked Phase 2 complete | Kimi Code CLI | packages/shared/src/schemas/ai-usage.ts, packages/ai-core/src/usage.ts, packages/ai-core/src/synthesis.ts, packages/ai-core/src/eeat-judge.ts, packages/jobs/src/workers/synthesize.ts, packages/jobs/src/workers/score.ts, related tests, plans/* |
 | 2026-07-15 | Phase 3 security hardening start | Added GEO.RedirectBlocked error, blocked cross-domain and private redirect targets in fetchHtml, added per-domain Redis token bucket rate limiter to collect worker | Kimi Code CLI | packages/shared/src/errors/geo-errors.ts, packages/core/src/collectors/fetch-html.ts, packages/core/src/__tests__/collectors/fetch-html.test.ts, packages/jobs/src/rate-limit.ts, packages/jobs/src/__tests__/rate-limit.test.ts, packages/jobs/src/workers/collect.ts, plans/* |
 | 2026-07-15 | Phase 3 public share links | Added share_token column to reports, generated token in report worker, added unauthenticated GET /reports/share/:token endpoint, pushed schema changes | Kimi Code CLI | packages/db/src/schema.ts, packages/jobs/src/workers/report.ts, packages/api/src/routes/reports.ts, packages/api/src/__tests__/reports.test.ts, plans/* |
+| 2026-07-15 | Phase 3 Stripe billing | Added billing columns to clients and clientId to audits, Stripe helper modules, monthly quota enforcement, usage reporting on POST /audits, tests | Kimi Code CLI | packages/db/src/schema.ts, packages/api/src/billing/*, packages/api/src/routes/audits.ts, packages/api/src/__tests__/billing/*, packages/api/src/__tests__/routes.test.ts, plans/* |
+| 2026-07-15 | Phase 3 white-label | Added WhiteLabelConfig schema, clients.white_label_config column, clients route, branded PDF template, Next.js theme injection, tests | Kimi Code CLI | packages/shared/src/schemas/white-label.ts, packages/db/src/schema.ts, packages/api/src/routes/clients.ts, packages/jobs/src/templates/report.html.ts, packages/jobs/src/workers/report.ts, packages/web/app/layout.tsx, packages/web/app/_components/header.tsx, packages/web/lib/api.ts, related tests, plans/* |
+| 2026-07-15 | Phase 3 geo-compare core | Added AuditDelta schema, calculateScoreChange helper, audit_deltas table, sites delta endpoints, tests | Kimi Code CLI | packages/shared/src/schemas/audit-delta.ts, packages/core/src/deltas/calculate-delta.ts, packages/db/src/schema.ts, packages/api/src/routes/sites.ts, packages/api/src/__tests__/sites.test.ts, plans/* |
+| 2026-07-15 | Phase 3 geo-compare scheduler + report | Added monthly re-audit scheduler, Bun.cron runner, delta HTML report template, tests | Kimi Code CLI | packages/jobs/src/scheduler/*, packages/jobs/src/templates/delta.html.ts, packages/jobs/src/__tests__/scheduler/*, packages/jobs/src/__tests__/templates/delta.html.test.ts, plans/* |
+| 2026-07-15 | Phase 3 observability (OpenTelemetry + cost dashboard) | Added OpenTelemetry tracing wrapper, wrapped pipeline workers in spans, added API/jobs tracing SDK initializers, added GET /usage endpoint with token/cost/cache metrics, fixed drizzle-orm duplicate instance and OpenTelemetry SDK imports | Kimi Code CLI | packages/shared/src/observability/*, packages/shared/src/__tests__/observability/*, packages/api/src/tracing.ts, packages/jobs/src/tracing.ts, packages/api/src/routes/usage.ts, packages/api/src/__tests__/usage.test.ts, package.json, bun.lock, plans/* |
 
 ## Quick Commands
 
