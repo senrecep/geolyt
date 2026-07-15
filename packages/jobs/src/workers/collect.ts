@@ -4,6 +4,7 @@ import type { PageData } from '@geolyt/shared'
 import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
+import { recordCrawlOutcome } from '../alerting/crawl-failure.js'
 import { aiRedisConnection, redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
 import { QUEUE_NAMES } from '../queues.js'
@@ -24,6 +25,13 @@ export const collectWorker = new Worker<AuditFlowInput, PageData>(
       await db.update(audits).set({ status: 'collecting' }).where(eq(audits.id, auditId))
 
       const result = await collectPage(url).toResult()
+      const outcome = result.ok
+        ? 'success'
+        : result.errors.some((error) => error.code === 'GEO.CrawlerBlocked')
+          ? 'blocked'
+          : 'error'
+      await recordCrawlOutcome(aiRedisConnection, hostname, outcome).toResult()
+
       if (!result.ok) {
         await db
           .update(audits)
