@@ -49,12 +49,12 @@
 - [x] Redirect validation: target must stay on same domain
 - [x] Per-domain rate limiter (Redis token bucket, 1 req/sec)
 - [ ] Secret scan pre-commit hook (grep for API keys in staged files)
-- **Owner:** — | **Date:** —
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
 ### Observability
 - [x] OpenTelemetry traces (collect/score/synthesize/report latency)
 - [x] Cost dashboard (AI tokens per audit per model)
-- [ ] Crawl failure alerting (>20% 403 rate)
+- [x] Crawl failure alerting (>20% 403 rate)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
 ### Billing (Stripe)

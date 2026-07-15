@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 3 — Production: implement observability (OpenTelemetry traces and cost dashboard).
+Phase 3 — Production: implement secret scan pre-commit hook.
 
 ## Session Log
 
@@ -32,6 +32,7 @@ Phase 3 — Production: implement observability (OpenTelemetry traces and cost d
 | 2026-07-15 | Phase 3 geo-compare core | Added AuditDelta schema, calculateScoreChange helper, audit_deltas table, sites delta endpoints, tests | Kimi Code CLI | packages/shared/src/schemas/audit-delta.ts, packages/core/src/deltas/calculate-delta.ts, packages/db/src/schema.ts, packages/api/src/routes/sites.ts, packages/api/src/__tests__/sites.test.ts, plans/* |
 | 2026-07-15 | Phase 3 geo-compare scheduler + report | Added monthly re-audit scheduler, Bun.cron runner, delta HTML report template, tests | Kimi Code CLI | packages/jobs/src/scheduler/*, packages/jobs/src/templates/delta.html.ts, packages/jobs/src/__tests__/scheduler/*, packages/jobs/src/__tests__/templates/delta.html.test.ts, plans/* |
 | 2026-07-15 | Phase 3 observability (OpenTelemetry + cost dashboard) | Added OpenTelemetry tracing wrapper, wrapped pipeline workers in spans, added API/jobs tracing SDK initializers, added GET /usage endpoint with token/cost/cache metrics, fixed drizzle-orm duplicate instance and OpenTelemetry SDK imports | Kimi Code CLI | packages/shared/src/observability/*, packages/shared/src/__tests__/observability/*, packages/api/src/tracing.ts, packages/jobs/src/tracing.ts, packages/api/src/routes/usage.ts, packages/api/src/__tests__/usage.test.ts, package.json, bun.lock, plans/* |
+| 2026-07-15 | Phase 3 observability (crawl failure alerting) | Added Redis-backed crawl outcome tracker, >20% blocked-rate alerting in collect worker, tests | Kimi Code CLI | packages/jobs/src/alerting/*, packages/jobs/src/__tests__/alerting/*, packages/jobs/src/workers/collect.ts, packages/jobs/package.json, bun.lock, plans/* |
 
 ## Quick Commands
 
