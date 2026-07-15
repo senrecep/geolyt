@@ -1,5 +1,5 @@
 import { ModelChain, type RedisLike, narrativeModels, synthesize } from '@geolyt/ai-core'
-import { auditResults, audits, db } from '@geolyt/db'
+import { auditResults, audits, db, usage } from '@geolyt/db'
 import type { AuditResult, Finding, ScoreResult } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
@@ -59,9 +59,21 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
         if (synthesis.ok) {
           auditResult = {
             ...auditResult,
-            findings: mergeFindings(auditResult.findings, synthesis.value.findings),
+            findings: mergeFindings(auditResult.findings, synthesis.value.output.findings),
             aiSynthesisUsed: true,
           }
+
+          await db.insert(usage).values({
+            clientId: null,
+            period: new Date().toISOString().slice(0, 7),
+            audits: 1,
+            aiTokensCached: synthesis.value.usage.cachedPromptTokens,
+            aiTokensUncached: Math.max(
+              0,
+              synthesis.value.usage.promptTokens - synthesis.value.usage.cachedPromptTokens,
+            ),
+            aiTokensOutput: synthesis.value.usage.completionTokens,
+          })
         }
       }
     } catch {

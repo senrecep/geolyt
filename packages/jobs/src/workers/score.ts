@@ -50,8 +50,8 @@ export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
       if (eeatModel) {
         const eeatResult = await judgeEeat(pageData, eeatModel)
         if (eeatResult.ok) {
-          contentQuality = eeatResult.value.score
-          contentFindings.push(...eeatResult.value.findings)
+          contentQuality = eeatResult.value.output.score
+          contentFindings.push(...eeatResult.value.output.findings)
         } else {
           contentFindings.push({
             code: 'AI.EeatJudgeFailed',
