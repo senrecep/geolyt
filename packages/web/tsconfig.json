@@ -6,7 +6,11 @@
     "jsx": "preserve",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "allowJs": true,
-    "incremental": true
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
-  "include": ["next-env.d.ts", "src/**/*", "*.ts"]
+  "include": ["next-env.d.ts", "src/**/*", "app/**/*", "lib/**/*", "*.ts"]
 }
