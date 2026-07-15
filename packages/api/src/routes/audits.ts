@@ -3,25 +3,29 @@ import { enqueueAudit } from '@geolyt/jobs'
 import { AuditJobInput } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
+import { auth } from '../auth.js'
 
 export const auditsRoute = new Elysia({ prefix: '/audits' })
-  .onBeforeHandle(async ({ headers, set }) => {
+  .onBeforeHandle(async ({ headers, request, set }) => {
     const key = headers['x-api-key']
-    if (typeof key !== 'string' || key.length === 0) {
-      set.status = 401
-      return { error: 'Missing API key' }
-    }
-
-    const records = await db.select().from(apiKeys).where(eq(apiKeys.isActive, true))
-    for (const record of records) {
-      if (await Bun.password.verify(key, record.keyHash)) {
-        await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, record.id))
-        return
+    if (typeof key === 'string' && key.length > 0) {
+      const records = await db.select().from(apiKeys).where(eq(apiKeys.isActive, true))
+      for (const record of records) {
+        if (await Bun.password.verify(key, record.keyHash)) {
+          await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, record.id))
+          return
+        }
       }
+
+      set.status = 401
+      return { error: 'Invalid API key' }
     }
 
-    set.status = 401
-    return { error: 'Invalid API key' }
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session) {
+      set.status = 401
+      return { error: 'Unauthorized' }
+    }
   })
   .post(
     '/',
