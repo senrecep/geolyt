@@ -8,6 +8,7 @@ export const WhiteLabelConfig = z.object({
     .string()
     .regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, 'Invalid hex color')
     .optional(),
+  domain: z.string().min(1).optional(),
 })
 
 export type WhiteLabelConfig = z.infer<typeof WhiteLabelConfig>

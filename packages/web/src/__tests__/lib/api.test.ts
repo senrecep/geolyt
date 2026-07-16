@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { fetchAudit, fetchAudits, fetchClient, fetchReport } from '../../../lib/api'
+import {
+  fetchAudit,
+  fetchAudits,
+  fetchClient,
+  fetchClientByDomain,
+  fetchReport,
+} from '../../../lib/api'
 
 const mockAudit = {
   audit_id: 'a1b2c3d4',
@@ -81,6 +87,20 @@ describe('fetchClient', () => {
   it('throws when the API returns an error', async () => {
     global.fetch = mockFetch({ error: 'Unauthorized' }, 401) as unknown as typeof fetch
     await expect(fetchClient(mockCookie)).rejects.toThrow('Unauthorized')
+  })
+})
+
+describe('fetchClientByDomain', () => {
+  it('returns client info for a matching custom domain', async () => {
+    global.fetch = mockFetch(mockClient) as unknown as typeof fetch
+    const client = await fetchClientByDomain('dashboard.agency.test')
+    expect(client?.id).toBe('client-1')
+  })
+
+  it('returns null when no client matches the domain', async () => {
+    global.fetch = mockFetch({ error: 'not found' }, 404) as unknown as typeof fetch
+    const client = await fetchClientByDomain('unknown.test')
+    expect(client).toBeNull()
   })
 })
 

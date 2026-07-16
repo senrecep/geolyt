@@ -1,6 +1,6 @@
 import { apiKeys, clients, db } from '@geolyt/db'
 import { WhiteLabelConfig } from '@geolyt/shared'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
 import { auth } from '../auth.js'
 
@@ -29,6 +29,29 @@ async function resolveClientId(headers: Headers): Promise<string | null> {
 }
 
 export const clientsRoute = new Elysia({ prefix: '/clients' })
+  .get(
+    '/lookup',
+    async ({ query: { domain }, set }) => {
+      const client = await db.query.clients.findFirst({
+        where: sql`${clients.whiteLabelConfig}->>'domain' = ${domain}`,
+      })
+
+      if (!client) {
+        set.status = 404
+        return { error: 'Client not found' }
+      }
+
+      return {
+        id: client.id,
+        white_label_config: client.whiteLabelConfig,
+      }
+    },
+    {
+      query: t.Object({
+        domain: t.String({ minLength: 1 }),
+      }),
+    },
+  )
   .get('/me', async ({ request, set }) => {
     const clientId = await resolveClientId(request.headers)
     if (!clientId) {
@@ -92,6 +115,7 @@ export const clientsRoute = new Elysia({ prefix: '/clients' })
         logoUrl: t.Optional(t.String({ format: 'uri' })),
         faviconUrl: t.Optional(t.String({ format: 'uri' })),
         primaryColor: t.Optional(t.String()),
+        domain: t.Optional(t.String({ minLength: 1 })),
       }),
     },
   )

@@ -77,6 +77,26 @@ export async function fetchClient(cookie?: string): Promise<ClientInfo> {
   return data
 }
 
+export async function fetchClientByDomain(domain: string): Promise<ClientInfo | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/clients/lookup?domain=${encodeURIComponent(domain)}`,
+    {
+      next: { revalidate: 300 },
+    },
+  )
+
+  if (response.status === 404) {
+    return null
+  }
+
+  const data = (await response.json()) as ClientInfo | { error: string }
+  if (!response.ok || 'error' in data) {
+    throw new Error('error' in data ? data.error : `Failed to lookup client: ${response.status}`)
+  }
+
+  return data
+}
+
 export async function fetchReport(auditId: string, cookie?: string): Promise<ReportInfo> {
   const response = await fetch(`${API_BASE_URL}/audits/${auditId}/report`, {
     headers: buildHeaders(cookie),
