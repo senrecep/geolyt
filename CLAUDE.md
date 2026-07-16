@@ -52,6 +52,23 @@ packages/web     → Next.js 16 dashboard
 - No AI in `packages/core` scorers
 - No pnpm — Bun workspaces only
 
+## Key Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/auth/*` | better-auth session endpoints |
+| POST | `/audits` | Start an audit (enqueues BullMQ pipeline) |
+| GET | `/audits/:id` | Fetch audit status and result |
+| GET | `/audits/:id/stream` | SSE progress stream |
+| GET | `/reports/:id` | Download PDF report |
+| GET | `/reports/share/:token` | Public shareable report landing page |
+| GET | `/usage` | AI token usage and cost metrics |
+| PATCH | `/clients/me/white-label` | Update white-label config |
+| GET | `/clients/lookup` | Resolve custom-domain white-label config |
+| POST | `/webhooks/stripe` | Stripe webhook handler |
+| POST | `/sites/:id/deltas` | Create monthly delta report |
+| GET | `/sites/:id/deltas` | List delta reports for a site |
+
 ## Context Management
 
 - Compact at **40%** context fill
