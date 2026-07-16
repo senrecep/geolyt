@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 3 — Production: core implementation complete; remaining optional work is E2E pipeline runtime verification, CNAME docs, and AI-core circuit breaker.
+Phase 3 — Production: core implementation complete; remaining optional work is CNAME setup docs and AI-core circuit breaker.
 
 ## Session Log
 
@@ -38,6 +38,7 @@ Phase 3 — Production: core implementation complete; remaining optional work is
 | 2026-07-15 | Phase 3 OG meta tags for shared reports | Added share landing page HTML template with OG/Twitter meta tags, updated \`/reports/share/:token\` to return HTML instead of redirecting to PDF, added \`NEXT_PUBLIC_APP_URL\` env, updated tests | Kimi Code CLI | packages/jobs/src/templates/share-landing.html.ts, packages/jobs/src/__tests__/templates/share-landing.html.test.ts, packages/jobs/src/index.ts, packages/api/src/routes/reports.ts, packages/api/src/__tests__/reports.test.ts, .env.example, plans/* |
 | 2026-07-15 | Phase 3 custom-domain CNAME support | Added \`domain\` field to WhiteLabelConfig, \`GET /clients/lookup\` endpoint, Next.js middleware that sets white-label cookie by custom domain, layout reads cookie before falling back to auth client | Kimi Code CLI | packages/shared/src/schemas/white-label.ts, packages/api/src/routes/clients.ts, packages/api/src/__tests__/routes/clients.test.ts, packages/web/lib/api.ts, packages/web/src/__tests__/lib/api.test.ts, packages/web/middleware.ts, packages/web/app/layout.tsx, plans/* |
 | 2026-07-15 | Phase 3 E2E pipeline test skeleton | Added full collect-score-synthesize-report job tree test using FlowProducer; added skipped E2E test that needs active worker runtime and Redis to run | Kimi Code CLI | packages/jobs/src/__tests__/flow.test.ts, packages/jobs/src/__tests__/e2e/pipeline.test.ts, plans/* |
+| 2026-07-15 | Phase 3 E2E pipeline runtime verification | Fixed \`audit.generatedAt\` Date/string serialization in report worker; enabled E2E pipeline test against example.com; all 186 tests pass | Kimi Code CLI | packages/jobs/src/workers/report.ts, packages/jobs/src/__tests__/e2e/pipeline.test.ts, plans/* |
 
 ## Quick Commands
 

@@ -12,6 +12,7 @@
 - [x] Public shareable report link works as lead-gen
 - [x] SSRF protection blocks private IP ranges
 - [x] Per-domain rate limiting enforced (no IP ban risk)
+- [x] BullMQ pipeline wired end-to-end with passing E2E test
 
 ## Tasks
 
