@@ -7,8 +7,8 @@
 ## Acceptance Criteria
 
 - [x] White-label client can use custom domain + branded PDF
-- [ ] Stripe metered billing charges per audit
-- [ ] Monthly delta reports show score change vs previous audit
+- [x] Stripe metered billing charges per audit
+- [x] Monthly delta reports show score change vs previous audit
 - [x] Public shareable report link works as lead-gen
 - [x] SSRF protection blocks private IP ranges
 - [x] Per-domain rate limiting enforced (no IP ban risk)
