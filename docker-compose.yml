@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: geolyt-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-geolyt}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-geolyt}
@@ -10,6 +11,8 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - geolyt-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-geolyt} -d ${POSTGRES_DB:-geolyt}"]
       interval: 5s
@@ -19,10 +22,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: geolyt-redis
+    restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - geolyt-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,6 +38,7 @@ services:
   firecrawl:
     image: ghcr.io/mendableai/firecrawl:latest
     container_name: geolyt-firecrawl
+    restart: unless-stopped
     ports:
       - "${FIRECRAWL_PORT:-3002}:3002"
     environment:
@@ -44,15 +51,24 @@ services:
         condition: service_healthy
       playwright:
         condition: service_started
+    networks:
+      - geolyt-network
 
   playwright:
     image: browserless/chrome:latest
     container_name: geolyt-playwright
+    restart: unless-stopped
     ports:
       - "${PLAYWRIGHT_PORT:-3000}:3000"
     environment:
       - MAX_CONCURRENT_SESSIONS=5
       - CONNECTION_TIMEOUT=60000
+    networks:
+      - geolyt-network
+
+networks:
+  geolyt-network:
+    driver: bridge
 
 volumes:
   postgres_data:

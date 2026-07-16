@@ -1,0 +1,84 @@
+# =============================================================================
+# geolyt - Infrastructure Stack (Stack 1: Postgres + Redis)
+# =============================================================================
+#
+# Shared infrastructure used by the App stack.
+#
+# DEPLOYMENT STRATEGY (2-stack approach):
+#   Stack 1 - Infra (this file):    postgres, redis
+#   Stack 2 - App:                  docker-compose.app.dokploy.yml
+#
+#   Deploy this stack FIRST. The App stack connects to geolyt-postgres and
+#   geolyt-redis containers via the shared dokploy-network.
+#
+# Usage in Dokploy:
+#   1. Create new project > Add "Docker Compose" service (name: "infra")
+#   2. Source: Git Repository, branch: main
+#   3. Compose file path: docker-compose.infra.dokploy.yml
+#   4. Set all env vars in Dokploy UI > Environment tab
+#
+# Requirements:
+#   - Dokploy panel: disable "Enable Isolated Deployment"
+#   - dokploy-network must exist (created by Dokploy automatically)
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: geolyt-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-geolyt}
+    volumes:
+      - /mnt/docker_storage/geolyt/postgres:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-geolyt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+
+  redis:
+    image: redis:7-alpine
+    container_name: geolyt-redis
+    restart: always
+    environment:
+      REDIS_ARGS: "--maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy noeviction --appendonly yes"
+    volumes:
+      - /mnt/docker_storage/geolyt/redis:/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+networks:
+  dokploy-network:
+    external: true

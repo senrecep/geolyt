@@ -1,0 +1,267 @@
+# =============================================================================
+# geolyt - Dokploy Production (single stack)
+# =============================================================================
+#
+# Single-stack deployment for smaller VDS setups. Includes infrastructure and
+# app services in one compose file.
+#
+# Usage in Dokploy:
+#   1. Create new project > Add "Docker Compose" service (name: "app")
+#   2. Source: Git Repository, branch: main
+#   3. Compose file path: docker-compose.dokploy.yml
+#   4. Set all env vars in Dokploy UI > Environment tab
+#
+# Requirements:
+#   - Dokploy panel: disable "Enable Isolated Deployment"
+#   - dokploy-network must exist (created by Dokploy automatically)
+#
+# First deploy:
+#   Run migration via Dokploy > api > Console: bun /app/packages/db/src/migrate.ts
+#
+# Domain config: Dokploy UI > Domains tab per service (Traefik handles SSL)
+# NEXT_PUBLIC_* vars: also set as Build Args in Dokploy > Service > Build
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: geolyt-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-geolyt}
+    volumes:
+      - /mnt/docker_storage/geolyt/postgres:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-geolyt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+
+  redis:
+    image: redis:7-alpine
+    container_name: geolyt-redis
+    restart: always
+    environment:
+      REDIS_ARGS: "--maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy noeviction --appendonly yes"
+    volumes:
+      - /mnt/docker_storage/geolyt/redis:/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  firecrawl:
+    image: ghcr.io/mendableai/firecrawl:latest
+    container_name: geolyt-firecrawl
+    restart: always
+    environment:
+      - REDIS_URL=redis://geolyt-redis:6379
+      - PLAYWRIGHT_MICROSERVICE_URL=http://geolyt-playwright:3000
+      - API_KEY=self-hosted
+      - MAX_WORKERS=2
+    networks:
+      - dokploy-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      playwright:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3002/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+
+  playwright:
+    image: browserless/chrome:latest
+    container_name: geolyt-playwright
+    restart: always
+    environment:
+      - MAX_CONCURRENT_SESSIONS=5
+      - CONNECTION_TIMEOUT=60000
+    networks:
+      - dokploy-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: geolyt-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      API_PORT: "3000"
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@geolyt-postgres:5432/${POSTGRES_DB:-geolyt}
+      REDIS_URL: redis://geolyt-redis:6379
+      FIRECRAWL_URL: http://geolyt-firecrawl:3002
+      FIRECRAWL_API_KEY: self-hosted
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      GEOLYT_API_URL: ${GEOLYT_API_URL}
+      GEOLYT_DASHBOARD_API_KEY: ${GEOLYT_DASHBOARD_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      YOUTUBE_DATA_API_KEY: ${YOUTUBE_DATA_API_KEY:-}
+      WIKIPEDIA_USER_AGENT: ${WIKIPEDIA_USER_AGENT:-geolyt/1.0}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT:-}
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+      CLOUDFLARE_R2_PUBLIC_BASE_URL: ${CLOUDFLARE_R2_PUBLIC_BASE_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    networks:
+      - dokploy-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_GEOLYT_API_URL: ${NEXT_PUBLIC_GEOLYT_API_URL}
+        NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL}
+    container_name: geolyt-web
+    restart: always
+    environment:
+      NODE_ENV: production
+    networks:
+      - dokploy-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  jobs:
+    build:
+      context: .
+      dockerfile: packages/jobs/Dockerfile
+    container_name: geolyt-jobs
+    restart: always
+    environment:
+      NODE_ENV: production
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@geolyt-postgres:5432/${POSTGRES_DB:-geolyt}
+      REDIS_URL: redis://geolyt-redis:6379
+      FIRECRAWL_URL: http://geolyt-firecrawl:3002
+      FIRECRAWL_API_KEY: self-hosted
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      GEOLYT_API_URL: ${GEOLYT_API_URL}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      YOUTUBE_DATA_API_KEY: ${YOUTUBE_DATA_API_KEY:-}
+      WIKIPEDIA_USER_AGENT: ${WIKIPEDIA_USER_AGENT:-geolyt/1.0}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT:-}
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+      CLOUDFLARE_R2_PUBLIC_BASE_URL: ${CLOUDFLARE_R2_PUBLIC_BASE_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    networks:
+      - dokploy-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+
+networks:
+  dokploy-network:
+    external: true

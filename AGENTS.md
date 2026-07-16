@@ -462,3 +462,35 @@ Quick flow:
 6. `app/layout.tsx` reads the cookie and applies branding.
 
 Always match the exact hostname (no scheme, no trailing slash, no port). Test locally by editing `/etc/hosts` before asking a client to update DNS.
+
+---
+
+## 21. Deployment
+
+See `docs/deploy.md` for the full guide.
+
+Quick reference:
+
+```bash
+# Local infrastructure
+docker compose up -d
+
+# Local full stack
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
+
+# Dokploy production
+#   - Infra: docker-compose.infra.dokploy.yml
+#   - App:   docker-compose.app.dokploy.yml
+#   - Or single-stack: docker-compose.dokploy.yml
+```
+
+Build targets:
+- `packages/api/Dockerfile`  → `packages/api/dist/server.js`
+- `packages/web/Dockerfile`  → Next.js standalone output
+- `packages/jobs/Dockerfile` → `packages/jobs/dist/main.js`
+
+The API container runs migrations on startup via `packages/api/docker-entrypoint.sh`. For Dokploy first deploy, run migrations manually from the `api` console:
+
+```bash
+bun /app/packages/db/src/migrate.ts
+```

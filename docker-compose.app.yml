@@ -1,0 +1,120 @@
+# docker-compose.app.yml
+# Application services: api, web, jobs
+#
+# Usage:
+#   Infrastructure + App:
+#     docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
+#
+# Prerequisites:
+#   cp .env.example .env && fill in real values
+#   NEXT_PUBLIC_* vars are baked at build time; set them in .env BEFORE build.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: geolyt-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-4000}:3000"
+    environment:
+      NODE_ENV: production
+      API_PORT: "3000"
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-geolyt}:${POSTGRES_PASSWORD:-geolyt}@geolyt-postgres:5432/${POSTGRES_DB:-geolyt}
+      REDIS_URL: redis://geolyt-redis:6379
+      FIRECRAWL_URL: http://geolyt-firecrawl:3002
+      FIRECRAWL_API_KEY: self-hosted
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:4000}
+      GEOLYT_API_URL: ${GEOLYT_API_URL:-http://localhost:4000}
+      GEOLYT_DASHBOARD_API_KEY: ${GEOLYT_DASHBOARD_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      YOUTUBE_DATA_API_KEY: ${YOUTUBE_DATA_API_KEY:-}
+      WIKIPEDIA_USER_AGENT: ${WIKIPEDIA_USER_AGENT:-geolyt/1.0}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT:-}
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+      CLOUDFLARE_R2_PUBLIC_BASE_URL: ${CLOUDFLARE_R2_PUBLIC_BASE_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    networks:
+      - geolyt-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_GEOLYT_API_URL: ${NEXT_PUBLIC_GEOLYT_API_URL:-http://localhost:4000}
+        NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL:-http://localhost:4000}
+    container_name: geolyt-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+    networks:
+      - geolyt-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  jobs:
+    build:
+      context: .
+      dockerfile: packages/jobs/Dockerfile
+    container_name: geolyt-jobs
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-geolyt}:${POSTGRES_PASSWORD:-geolyt}@geolyt-postgres:5432/${POSTGRES_DB:-geolyt}
+      REDIS_URL: redis://geolyt-redis:6379
+      FIRECRAWL_URL: http://geolyt-firecrawl:3002
+      FIRECRAWL_API_KEY: self-hosted
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:4000}
+      GEOLYT_API_URL: ${GEOLYT_API_URL:-http://localhost:4000}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      YOUTUBE_DATA_API_KEY: ${YOUTUBE_DATA_API_KEY:-}
+      WIKIPEDIA_USER_AGENT: ${WIKIPEDIA_USER_AGENT:-geolyt/1.0}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT:-}
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+      CLOUDFLARE_R2_PUBLIC_BASE_URL: ${CLOUDFLARE_R2_PUBLIC_BASE_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    networks:
+      - geolyt-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+networks:
+  geolyt-network:
+    external: true
+    name: geolyt_geolyt-network
