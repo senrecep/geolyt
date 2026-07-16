@@ -9,11 +9,11 @@
 |---|---|---|---|---|
 | Phase 1 — Core Engine | [x] Complete | 2026-07-14 | 2026-07-14 | Kimi Code CLI |
 | Phase 2 — AI + Dashboard | [x] Complete | 2026-07-14 | 2026-07-15 | Kimi Code CLI |
-| Phase 3 — Production | [-] In progress | 2026-07-15 | — | Kimi Code CLI |
+| Phase 3 — Production | [x] Complete (core implementation) | 2026-07-15 | 2026-07-15 | Kimi Code CLI |
 
 ## Active Task
 
-Phase 3 — Production: core implementation complete; remaining optional work is CNAME setup docs.
+Phase 3 — Production: core implementation complete. Only CNAME setup docs remain (documentation-only).
 
 ## Session Log
 
@@ -40,6 +40,7 @@ Phase 3 — Production: core implementation complete; remaining optional work is
 | 2026-07-15 | Phase 3 E2E pipeline test skeleton | Added full collect-score-synthesize-report job tree test using FlowProducer; added skipped E2E test that needs active worker runtime and Redis to run | Kimi Code CLI | packages/jobs/src/__tests__/flow.test.ts, packages/jobs/src/__tests__/e2e/pipeline.test.ts, plans/* |
 | 2026-07-15 | Phase 3 E2E pipeline runtime verification | Fixed \`audit.generatedAt\` Date/string serialization in report worker; enabled E2E pipeline test against example.com; all 186 tests pass | Kimi Code CLI | packages/jobs/src/workers/report.ts, packages/jobs/src/__tests__/e2e/pipeline.test.ts, plans/* |
 | 2026-07-15 | Phase 3 AI-core circuit breaker verification | Verified \`ModelChain\` with Redis-backed health tracking, \`recordFailure\` / \`pickModel\`, and existing unit tests; \`scoringModels\` and \`narrativeModels\` use the Gemini chain with Anthropic fallback | Kimi Code CLI | packages/ai-core/src/provider-chain.ts, packages/ai-core/src/__tests__/provider-chain.test.ts, packages/ai-core/src/models.ts, plans/* |
+| 2026-07-15 | Phase 3 core complete | Closed all Phase 3 implementation issues (#22, #35, #36, #41, #42, #43, #4); marked Phase 3 core complete in plans; only CNAME setup docs remain | Kimi Code CLI | plans/* |
 
 ## Quick Commands
 

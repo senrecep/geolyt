@@ -2,7 +2,7 @@
 
 **Duration:** 8 weeks  
 **Goal:** White-label + billing + monthly deltas + public report links + hardening  
-**Status:** [-] In progress | **Prerequisite:** Phase 2 complete | **Started:** 2026-07-15
+**Status:** [x] Complete (core implementation) | **Prerequisite:** Phase 2 complete | **Started:** 2026-07-15
 
 ## Acceptance Criteria
 
@@ -112,3 +112,5 @@
 ## Known Blockers
 
 > None at start — requires Phase 2 complete
+>
+> Post-completion note: CNAME setup documentation for agency clients is the only remaining Phase 3 task; it is documentation-only and can be added outside the implementation cycle.
