@@ -49,10 +49,16 @@ describe('enqueueAudit', () => {
 
     expect(tree.job.queueName).toBe(QUEUE_NAMES.report)
     expect(tree.children).toHaveLength(1)
-    expect(tree.children[0]?.job.queueName).toBe(QUEUE_NAMES.synthesize)
-    expect(tree.children[0]?.children).toHaveLength(1)
-    expect(tree.children[0]?.children[0]?.job.queueName).toBe(QUEUE_NAMES.score)
-    expect(tree.children[0]?.children[0]?.children).toHaveLength(1)
-    expect(tree.children[0]?.children[0]?.children[0]?.job.queueName).toBe(QUEUE_NAMES.collect)
+
+    const synthesizeNode = tree.children?.[0]
+    expect(synthesizeNode?.job.queueName).toBe(QUEUE_NAMES.synthesize)
+    expect(synthesizeNode?.children).toHaveLength(1)
+
+    const scoreNode = synthesizeNode?.children?.[0]
+    expect(scoreNode?.job.queueName).toBe(QUEUE_NAMES.score)
+    expect(scoreNode?.children).toHaveLength(1)
+
+    const collectNode = scoreNode?.children?.[0]
+    expect(collectNode?.job.queueName).toBe(QUEUE_NAMES.collect)
   })
 })
