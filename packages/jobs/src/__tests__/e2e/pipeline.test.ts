@@ -54,10 +54,7 @@ describe('end-to-end audit pipeline', () => {
     await db.delete(audits).where(eq(audits.id, auditId))
   })
 
-  // Skipped by default: this test needs the full worker runtime to be active
-  // and a reachable Redis instance. Run it explicitly with:
-  //   bun test packages/jobs/src/__tests__/e2e/pipeline.test.ts
-  it.skip('runs collect, score, synthesize and report stages to completion', async () => {
+  it('runs collect, score, synthesize and report stages to completion', async () => {
     let completed = false
     let attempts = 0
     const maxAttempts = 90

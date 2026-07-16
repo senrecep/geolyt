@@ -29,7 +29,7 @@ function buildMarkdownReport(audit: AuditResult): string {
     '## Findings',
     ...audit.findings.map((f) => `- **${f.title}** (${f.severity}): ${f.description}`),
     '',
-    `_Generated at ${audit.generatedAt.toISOString()}_`,
+    `_Generated at ${new Date(audit.generatedAt).toISOString()}_`,
   ]
   return lines.join('\n')
 }
