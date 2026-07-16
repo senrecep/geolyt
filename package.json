@@ -14,6 +14,7 @@
     "db:generate": "bun run --filter=@geolyt/db db:generate",
     "db:migrate": "bun run --filter=@geolyt/db db:migrate",
     "db:push": "bun run --filter=@geolyt/db db:push",
+    "worker": "bun run --filter=@geolyt/jobs dev",
     "secret-scan": "bun run scripts/secret-scan.ts $(git diff --cached --name-only --diff-filter=ACM)"
   },
   "devDependencies": {
