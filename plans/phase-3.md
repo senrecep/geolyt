@@ -41,8 +41,8 @@
 ### Public report links
 - [x] Unauthenticated `/reports/:shareToken` route
 - [x] Share token generation on audit complete
-- [ ] OG meta tags for social sharing (score badge)
-- **Owner:** — | **Date:** —
+- [x] OG meta tags for social sharing (score badge)
+- **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
 ### Security hardening
 - [x] SSRF: block 10.x, 172.16.x, 192.168.x, 127.x in collectPage()
@@ -76,7 +76,8 @@
 - `packages/jobs/src/rate-limit.ts` — per-domain Redis token bucket helper
 
 ### Public report links
-- `packages/api/src/routes/reports.ts` — `/reports/share/:token` endpoint
+- `packages/api/src/routes/reports.ts` — `/reports/share/:token` endpoint (now returns an HTML landing page with OG meta tags)
+- `packages/jobs/src/templates/share-landing.html.ts` — shareable report landing page template
 
 ### Billing (Stripe)
 - `packages/api/src/billing/stripe.ts` — Stripe client and usage reporting helpers
