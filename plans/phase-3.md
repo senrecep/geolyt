@@ -26,7 +26,7 @@
 ### Billing (Stripe)
 - [x] Stripe metered billing integration
 - [x] Usage tracking in `usage` table (AI tokens attributed to client)
-- [ ] Webhook handlers (subscription events)
+- [x] Webhook handlers (subscription events)
 - [x] Quota enforcement in POST /audits (429 when exceeded)
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
@@ -81,6 +81,8 @@
 ### Billing (Stripe)
 - `packages/api/src/billing/stripe.ts` — Stripe client and usage reporting helpers
 - `packages/api/src/billing/quota.ts` — monthly quota check helpers
+- `packages/api/src/billing/webhooks.ts` — Stripe webhook event handlers (checkout, subscription update/delete)
+- `packages/api/src/routes/webhooks.ts` — `POST /webhooks/stripe` endpoint with signature verification
 
 ### White-label
 - `packages/shared/src/schemas/white-label.ts` — WhiteLabelConfig Zod schema

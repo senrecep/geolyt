@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 3 — Production: core tasks complete; remaining optional work is custom-domain CNAME support, OG meta tags for shared reports, and Stripe webhook handlers.
+Phase 3 — Production: add OG meta tags for public shareable report links (remaining optional: custom-domain CNAME support).
 
 ## Session Log
 
@@ -34,6 +34,7 @@ Phase 3 — Production: core tasks complete; remaining optional work is custom-d
 | 2026-07-15 | Phase 3 observability (OpenTelemetry + cost dashboard) | Added OpenTelemetry tracing wrapper, wrapped pipeline workers in spans, added API/jobs tracing SDK initializers, added GET /usage endpoint with token/cost/cache metrics, fixed drizzle-orm duplicate instance and OpenTelemetry SDK imports | Kimi Code CLI | packages/shared/src/observability/*, packages/shared/src/__tests__/observability/*, packages/api/src/tracing.ts, packages/jobs/src/tracing.ts, packages/api/src/routes/usage.ts, packages/api/src/__tests__/usage.test.ts, package.json, bun.lock, plans/* |
 | 2026-07-15 | Phase 3 observability (crawl failure alerting) | Added Redis-backed crawl outcome tracker, >20% blocked-rate alerting in collect worker, tests | Kimi Code CLI | packages/jobs/src/alerting/*, packages/jobs/src/__tests__/alerting/*, packages/jobs/src/workers/collect.ts, packages/jobs/package.json, bun.lock, plans/* |
 | 2026-07-15 | Phase 3 secret scan pre-commit hook | Added \`scripts/secret-scan.ts\` with regex patterns, tests, \`.githooks/pre-commit\` hook, and \`secret-scan\` npm script; hook skips test files and \`.env.example\` | Kimi Code CLI | scripts/secret-scan.ts, scripts/__tests__/secret-scan.test.ts, .githooks/pre-commit, package.json, plans/* |
+| 2026-07-15 | Phase 3 Stripe webhook handlers | Added \`stripe_subscription_id\` column, \`handleStripeEvent\` dispatcher, checkout/subscription update/delete handlers, \`POST /webhooks/stripe\` route with signature verification, tests | Kimi Code CLI | packages/db/src/schema.ts, packages/api/src/billing/webhooks.ts, packages/api/src/routes/webhooks.ts, packages/api/src/index.ts, packages/api/src/__tests__/billing/webhooks.test.ts, packages/api/package.json, bun.lock, plans/* |
 
 ## Quick Commands
 
