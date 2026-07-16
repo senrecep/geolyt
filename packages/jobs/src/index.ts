@@ -1,6 +1,7 @@
 export { redisConnection } from './connection.js'
 export * from './flow.js'
 export * from './queues.js'
+export * from './templates/share-landing.html.js'
 export * from './workers/collect.js'
 export * from './workers/report.js'
 export * from './workers/score.js'
