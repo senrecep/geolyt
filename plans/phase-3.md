@@ -2,7 +2,7 @@
 
 **Duration:** 8 weeks  
 **Goal:** White-label + billing + monthly deltas + public report links + hardening  
-**Status:** [x] Complete (core implementation) | **Prerequisite:** Phase 2 complete | **Started:** 2026-07-15
+**Status:** [x] Complete | **Prerequisite:** Phase 2 complete | **Started:** 2026-07-15 | **Completed:** 2026-07-15
 
 ## Acceptance Criteria
 
@@ -20,7 +20,7 @@
 - [x] `clients.white_label_config` JSONB column in Drizzle schema
 - [x] Next.js theme injection from client config (logo, colors)
 - [x] Custom domain / CNAME resolution middleware
-- [ ] CNAME setup docs for agency clients
+- [x] CNAME setup docs for agency clients
 - [x] Branded PDF via custom CSS in Playwright
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-15
 
@@ -91,6 +91,7 @@
 - `packages/api/src/routes/clients.ts` — GET /clients/me, PATCH /clients/me/white-label, and GET /clients/lookup
 - `packages/web/middleware.ts` — custom-domain middleware that sets a white-label cookie
 - `packages/web/lib/api.ts` — `fetchClientByDomain` helper
+- `docs/cname-setup.md` — agency client CNAME setup guide
 
 ### geo-compare (monthly deltas)
 - `packages/shared/src/schemas/audit-delta.ts` — AuditDelta and ScoreChange schemas
@@ -111,6 +112,4 @@
 
 ## Known Blockers
 
-> None at start — requires Phase 2 complete
->
-> Post-completion note: CNAME setup documentation for agency clients is the only remaining Phase 3 task; it is documentation-only and can be added outside the implementation cycle.
+> None.

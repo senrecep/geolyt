@@ -13,7 +13,7 @@
 
 ## Active Task
 
-Phase 3 — Production: core implementation complete. Only CNAME setup docs remain (documentation-only).
+All phases complete.
 
 ## Session Log
 
@@ -41,6 +41,7 @@ Phase 3 — Production: core implementation complete. Only CNAME setup docs rema
 | 2026-07-15 | Phase 3 E2E pipeline runtime verification | Fixed \`audit.generatedAt\` Date/string serialization in report worker; enabled E2E pipeline test against example.com; all 186 tests pass | Kimi Code CLI | packages/jobs/src/workers/report.ts, packages/jobs/src/__tests__/e2e/pipeline.test.ts, plans/* |
 | 2026-07-15 | Phase 3 AI-core circuit breaker verification | Verified \`ModelChain\` with Redis-backed health tracking, \`recordFailure\` / \`pickModel\`, and existing unit tests; \`scoringModels\` and \`narrativeModels\` use the Gemini chain with Anthropic fallback | Kimi Code CLI | packages/ai-core/src/provider-chain.ts, packages/ai-core/src/__tests__/provider-chain.test.ts, packages/ai-core/src/models.ts, plans/* |
 | 2026-07-15 | Phase 3 core complete | Closed all Phase 3 implementation issues (#22, #35, #36, #41, #42, #43, #4); marked Phase 3 core complete in plans; only CNAME setup docs remain | Kimi Code CLI | plans/* |
+| 2026-07-15 | Phase 3 CNAME docs | Added \`docs/cname-setup.md\` with DNS, TLS, config, local testing, and troubleshooting steps; marked Phase 3 fully complete | Kimi Code CLI | docs/cname-setup.md, plans/* |
 
 ## Quick Commands
 
