@@ -400,3 +400,65 @@ const firecrawl = new FirecrawlApp({
 
 Docker service: `ghcr.io/mendableai/firecrawl:latest`  
 Includes Playwright for JS rendering. No Fire-engine (Cloudflare bypass) on self-hosted.
+
+---
+
+## 17. Pre-commit Secret Scan
+
+The hook at `.githooks/pre-commit` runs `bun run secret-scan` against staged files.
+
+```bash
+# Run manually
+bun run secret-scan
+```
+
+Covered patterns live in `scripts/secret-scan.ts`:
+- Stripe `sk_live_`, `sk_test_`, `rk_` keys
+- OpenAI `sk-...`, Anthropic `sk-ant-...`, Google `AIza...`
+- Cloudflare API tokens
+- Generic `api_key` / `secret_key` assignments
+
+`.env.example` and `*.test.ts` files are ignored. If a match is found, the commit is blocked until the secret is removed or the file is added to the ignore list with a documented reason.
+
+---
+
+## 18. OpenTelemetry Tracing
+
+Initialize tracing early in each service entry point:
+
+```typescript
+// packages/api/src/index.ts or packages/jobs/src/index.ts
+import { initTracing } from './tracing'
+initTracing('geolyt-api') // or 'geolyt-jobs'
+```
+
+The `NodeSDK` is only started when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Traces export via OTLP/HTTP. The shared tracer is available through `@geolyt/shared` for manual spans inside workers and route handlers.
+
+---
+
+## 19. Stripe Webhooks
+
+Webhook handler is in `packages/api/src/billing/webhooks.ts`. It expects the raw request body to be verified by the caller using `STRIPE_WEBHOOK_SECRET`.
+
+Handled event types:
+- `checkout.session.completed` → stores `stripeCustomerId`, `stripeSubscriptionId`, `plan`, `monthlyQuota`
+- `customer.subscription.updated` → updates `plan` and `monthlyQuota` based on status
+- `customer.subscription.deleted` → resets plan to `free` and clears quota
+
+Return a `ResultAsync<void>`; do not throw. Log failures and return `500` only for unexpected errors so Stripe retries.
+
+---
+
+## 20. White-Label Custom Domains (CNAME)
+
+Agency clients can point their own subdomain to the Geolyt dashboard. The full setup guide is in `docs/cname-setup.md`.
+
+Quick flow:
+1. Client creates a CNAME record: `dashboard.client.com` → `app.geolyt.io`
+2. Reverse proxy terminates TLS and forwards the `Host` header.
+3. `packages/web/middleware.ts` calls `GET /clients/lookup?domain=dashboard.client.com`.
+4. API matches `clients.white_label_config->>'domain'` and returns the config.
+5. Middleware stores the config in the `x-geolyt-white-label` cookie (24h).
+6. `app/layout.tsx` reads the cookie and applies branding.
+
+Always match the exact hostname (no scheme, no trailing slash, no port). Test locally by editing `/etc/hosts` before asking a client to update DNS.
