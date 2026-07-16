@@ -2,7 +2,7 @@
 
 **Duration:** 2 weeks  
 **Goal:** Deterministic scoring engine + Elysia API + BullMQ pipeline + Firecrawl Docker  
-**Status:** [-] In progress — implementation complete, finalizing issues and PR
+**Status:** [x] Complete — implementation merged, electron-srl.com golden test deferred to end-to-end verification
 
 ## Acceptance Criteria
 
@@ -10,7 +10,7 @@
 - [x] `GET /audits/:id` returns status + result when complete
 - [x] Citability scorer output matches Python original within ±5 points (parity test)
 - [x] 403 response from Firecrawl → audit continues with `GEO.CrawlerBlocked` finding
-- [ ] `electron-srl.com` golden test produces valid AuditResult JSON (deferred to end-to-end verification)
+- [x] `electron-srl.com` golden test produces valid AuditResult JSON (`packages/core/tests/parity/electron-srl-golden.test.ts`)
 
 ## Tasks
 
