@@ -6,7 +6,7 @@
 
 ## Acceptance Criteria
 
-- [ ] White-label client can use custom domain + branded PDF
+- [x] White-label client can use custom domain + branded PDF
 - [ ] Stripe metered billing charges per audit
 - [ ] Monthly delta reports show score change vs previous audit
 - [x] Public shareable report link works as lead-gen
@@ -18,7 +18,7 @@
 ### White-label
 - [x] `clients.white_label_config` JSONB column in Drizzle schema
 - [x] Next.js theme injection from client config (logo, colors)
-- [ ] Custom domain / CNAME resolution middleware
+- [x] Custom domain / CNAME resolution middleware
 - [ ] CNAME setup docs for agency clients
 - [x] Branded PDF via custom CSS in Playwright
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-15
@@ -86,8 +86,10 @@
 - `packages/api/src/routes/webhooks.ts` — `POST /webhooks/stripe` endpoint with signature verification
 
 ### White-label
-- `packages/shared/src/schemas/white-label.ts` — WhiteLabelConfig Zod schema
-- `packages/api/src/routes/clients.ts` — GET /clients/me and PATCH /clients/me/white-label
+- `packages/shared/src/schemas/white-label.ts` — WhiteLabelConfig Zod schema (now includes `domain`)
+- `packages/api/src/routes/clients.ts` — GET /clients/me, PATCH /clients/me/white-label, and GET /clients/lookup
+- `packages/web/middleware.ts` — custom-domain middleware that sets a white-label cookie
+- `packages/web/lib/api.ts` — `fetchClientByDomain` helper
 
 ### geo-compare (monthly deltas)
 - `packages/shared/src/schemas/audit-delta.ts` — AuditDelta and ScoreChange schemas
