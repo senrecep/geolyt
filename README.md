@@ -17,6 +17,17 @@ Geolyt fetches and analyzes any website, then scores it across six dimensions:
 
 The output is a GEO Score (0–100), a prioritized list of findings, and a PDF report.
 
+## Features
+
+- **Deterministic scoring** — no AI cost for 70% of the GEO Score (citability, crawler access, technical SEO, schema, llms.txt)
+- **AI synthesis** — E-E-A-T judgment, executive summary, and prioritized findings via Gemini (with Anthropic fallback)
+- **PDF reports** — branded PDFs stored on Cloudflare R2, with public shareable links and OG meta tags
+- **White-label** — per-client branding, custom dashboard colors/logo, and CNAME custom-domain support
+- **Stripe billing** — metered usage, monthly quotas, and subscription lifecycle webhooks
+- **Monthly deltas** — re-audit scheduler and score-change reports for ongoing clients
+- **Observability** — OpenTelemetry tracing, cost dashboard, and crawl-failure alerting
+- **Security** — SSRF protection, private-IP redirect blocking, and per-domain rate limiting
+
 ## Stack
 
 - **Runtime:** Bun
