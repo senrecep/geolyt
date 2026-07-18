@@ -1,6 +1,6 @@
 import { collectPage } from '@geolyt/core'
 import { audits, db } from '@geolyt/db'
-import type { PageData } from '@geolyt/shared'
+import type { CollectResult } from '@geolyt/shared'
 import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
@@ -9,8 +9,9 @@ import { aiRedisConnection, redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
 import { QUEUE_NAMES } from '../queues.js'
 import { checkCollectRateLimit } from '../rate-limit.js'
+import { resolveCollectOutcome } from './degraded.js'
 
-export const collectWorker = new Worker<AuditFlowInput, PageData>(
+export const collectWorker = new Worker<AuditFlowInput, CollectResult>(
   QUEUE_NAMES.collect,
   async (job) => {
     const { auditId, url } = job.data
@@ -25,22 +26,18 @@ export const collectWorker = new Worker<AuditFlowInput, PageData>(
       await db.update(audits).set({ status: 'collecting' }).where(eq(audits.id, auditId))
 
       const result = await collectPage(url).toResult()
-      const outcome = result.ok
-        ? 'success'
-        : result.errors.some((error) => error.code === 'GEO.CrawlerBlocked')
-          ? 'blocked'
-          : 'error'
-      await recordCrawlOutcome(aiRedisConnection, hostname, outcome).toResult()
+      const outcome = resolveCollectOutcome(result)
+      await recordCrawlOutcome(aiRedisConnection, hostname, outcome.status).toResult()
 
-      if (!result.ok) {
+      if (outcome.status === 'error') {
         await db
           .update(audits)
           .set({ status: 'failed', completedAt: new Date() })
           .where(eq(audits.id, auditId))
-        throw new Error(result.errors.map((e) => `${e.code}: ${e.description}`).join(', '))
+        throw new Error(outcome.message)
       }
 
-      return result.value
+      return outcome.value
     })
   },
   { connection: redisConnection, concurrency: 5 },

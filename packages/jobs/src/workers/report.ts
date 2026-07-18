@@ -81,7 +81,10 @@ export const reportWorker = new Worker<AuditFlowInput>(
 
       await db
         .update(audits)
-        .set({ status: 'completed', completedAt: new Date() })
+        .set({
+          status: auditResult.status === 'degraded' ? 'degraded' : 'completed',
+          completedAt: new Date(),
+        })
         .where(eq(audits.id, auditId))
 
       return { storageKey, publicUrl, content }

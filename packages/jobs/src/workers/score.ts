@@ -1,13 +1,14 @@
 import { judgeEeat, scoringModels } from '@geolyt/ai-core'
 import { computeCompositeScore, scoreAll, scoreBrandAuthority } from '@geolyt/core'
 import { audits, db } from '@geolyt/db'
-import type { Finding, PageData, ScoreResult } from '@geolyt/shared'
+import type { CollectResult, Finding, ScoreResult } from '@geolyt/shared'
 import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { aiRedisConnection, redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
 import { QUEUE_NAMES } from '../queues.js'
+import { buildCrawlerBlockedScore } from './degraded.js'
 
 function formatErrors(errors: ReadonlyArray<{ code: string; description: string }>): string {
   return errors.map((e) => `${e.code}: ${e.description}`).join(', ')
@@ -22,9 +23,14 @@ export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
       await db.update(audits).set({ status: 'scoring' }).where(eq(audits.id, auditId))
 
       const children = await job.getChildrenValues()
-      const pageData = Object.values(children)[0] as PageData | undefined
+      const collectResult = Object.values(children)[0] as CollectResult | undefined
+      if (!collectResult) {
+        throw new Error('Missing collect result')
+      }
+
+      const { pageData } = collectResult
       if (!pageData) {
-        throw new Error('Missing collected page data')
+        return buildCrawlerBlockedScore(url)
       }
 
       const baseResult = scoreAll(pageData)
@@ -96,6 +102,7 @@ export const scoreWorker = new Worker<AuditFlowInput, ScoreResult>(
         scores: recomposite.value,
         findings: [...baseResult.value.findings, ...brandFindings, ...contentFindings],
         crawlerAccess: baseResult.value.crawlerAccess,
+        degraded: false,
       }
 
       return result

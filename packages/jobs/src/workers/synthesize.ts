@@ -1,18 +1,38 @@
 import { ModelChain, type RedisLike, narrativeModels, synthesize } from '@geolyt/ai-core'
 import { auditResults, audits, db, usage } from '@geolyt/db'
-import type { AuditResult, Finding, ScoreResult } from '@geolyt/shared'
+import type { AiUsage, AuditResult, Finding, ScoreResult } from '@geolyt/shared'
 import { withSpan } from '@geolyt/shared'
 import { Worker } from 'bullmq'
 import { eq } from 'drizzle-orm'
+import { Err } from 'tsentials/errors'
+import { ResultAsync } from 'tsentials/result'
 import { aiRedisConnection, redisConnection } from '../connection.js'
 import type { AuditFlowInput } from '../flow.js'
 import { QUEUE_NAMES } from '../queues.js'
+
+export function buildSynthesisUsageRow(input: {
+  clientId: string | null
+  auditId: string
+  modelId: string
+  period: string
+  usage: AiUsage
+}): typeof usage.$inferInsert {
+  return {
+    clientId: input.clientId,
+    auditId: input.auditId,
+    period: input.period,
+    model: input.modelId,
+    aiTokensCached: input.usage.cachedPromptTokens,
+    aiTokensUncached: Math.max(0, input.usage.promptTokens - input.usage.cachedPromptTokens),
+    aiTokensOutput: input.usage.completionTokens,
+  }
+}
 
 function buildAuditResult(input: AuditFlowInput, scoreResult: ScoreResult): AuditResult {
   return {
     auditId: input.auditId,
     url: input.url,
-    status: 'completed',
+    status: scoreResult.degraded ? 'degraded' : 'completed',
     scores: scoreResult.scores,
     findings: scoreResult.findings,
     crawlerAccess: scoreResult.crawlerAccess,
@@ -52,41 +72,49 @@ export const synthesizeWorker = new Worker<AuditFlowInput, AuditResult>(
 
         let auditResult = buildAuditResult(job.data, scoreResult)
 
-        const auditRow = await db.query.audits.findFirst({
-          where: eq(audits.id, auditId),
-          columns: { clientId: true },
-        })
-
-        try {
-          const chain = new ModelChain(narrativeModels(), {
-            redis: aiRedisConnection as unknown as RedisLike,
+        // A degraded audit (AI crawlers blocked) has nothing to synthesize from —
+        // scores are all 0 and the finding is already authored — so skip the model
+        // call and the usage insert entirely.
+        if (!scoreResult.degraded) {
+          const auditRow = await db.query.audits.findFirst({
+            where: eq(audits.id, auditId),
+            columns: { clientId: true },
           })
-          const model = await chain.pickModel()
 
-          if (model) {
-            const synthesis = await synthesize(auditResult, model)
+          // AI synthesis is optional; on failure the template result stands.
+          await ResultAsync.try(
+            async () => {
+              const chain = new ModelChain(narrativeModels(), {
+                redis: aiRedisConnection as unknown as RedisLike,
+              })
+              const model = await chain.pickModel()
+              if (!model) {
+                return
+              }
 
-            if (synthesis.ok) {
+              const synthesis = await synthesize(auditResult, model)
+              if (!synthesis.ok) {
+                return
+              }
+
               auditResult = {
                 ...auditResult,
                 findings: mergeFindings(auditResult.findings, synthesis.value.output.findings),
                 aiSynthesisUsed: true,
               }
 
-              await db.insert(usage).values({
-                clientId: auditRow?.clientId ?? null,
-                period: new Date().toISOString().slice(0, 7),
-                aiTokensCached: synthesis.value.usage.cachedPromptTokens,
-                aiTokensUncached: Math.max(
-                  0,
-                  synthesis.value.usage.promptTokens - synthesis.value.usage.cachedPromptTokens,
-                ),
-                aiTokensOutput: synthesis.value.usage.completionTokens,
-              })
-            }
-          }
-        } catch {
-          // AI synthesis is optional; fall back to the template result.
+              await db.insert(usage).values(
+                buildSynthesisUsageRow({
+                  clientId: auditRow?.clientId ?? null,
+                  auditId,
+                  modelId: model.modelId,
+                  period: new Date().toISOString().slice(0, 7),
+                  usage: synthesis.value.usage,
+                }),
+              )
+            },
+            (error) => Err.unexpected('Jobs.SynthesisSkipped', `AI synthesis skipped: ${error}`),
+          ).toResult()
         }
 
         await db.insert(auditResults).values({
