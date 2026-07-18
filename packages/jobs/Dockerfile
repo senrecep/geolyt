@@ -2,9 +2,9 @@
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 # Chromium + fonts for PDF generation in the report worker
+# The alpine chromium package already provides /usr/bin/chromium.
 RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-dejavu fontconfig && \
-    ln -s /usr/bin/chromium-browser /usr/bin/chromium && \
-    fc-cache -fv
+    fc-cache -f
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 # ---- Dependencies ----
