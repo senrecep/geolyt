@@ -1,3 +1,4 @@
+import { logger } from '@geolyt/shared'
 import { startMonthlyReAuditScheduler } from './scheduler/runner.js'
 import { initTracing } from './tracing.js'
 
@@ -13,4 +14,4 @@ import './workers/synthesize.js'
 // Start the monthly re-audit cron scheduler.
 startMonthlyReAuditScheduler()
 
-console.info('Geolyt jobs worker started')
+logger.info('Geolyt jobs worker started')

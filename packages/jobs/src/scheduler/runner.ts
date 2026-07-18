@@ -1,3 +1,4 @@
+import { logger } from '@geolyt/shared'
 import { scheduleMonthlyReAudits } from './monthly-audit.js'
 
 export function startMonthlyReAuditScheduler(): void {
@@ -8,5 +9,5 @@ export function startMonthlyReAuditScheduler(): void {
     return
   }
 
-  console.warn('Bun.cron is not available; monthly re-audits must be triggered manually.')
+  logger.warn('Bun.cron is not available; monthly re-audits must be triggered manually.')
 }

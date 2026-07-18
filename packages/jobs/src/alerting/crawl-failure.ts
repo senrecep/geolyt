@@ -1,3 +1,4 @@
+import { logger } from '@geolyt/shared'
 import type { Redis } from 'ioredis'
 import { Err } from 'tsentials/errors'
 import { Result, ResultAsync } from 'tsentials/result'
@@ -20,8 +21,10 @@ const KEY_TTL_SECONDS = 3600
 export type AlertEmitter = (alert: CrawlAlert) => void
 
 let alertEmitter: AlertEmitter = (alert) => {
-  const message = `[crawl-alert] ${alert.domain}: ${alert.blocked}/${alert.total} blocked (${Math.round(alert.rate * 100)}%)`
-  process.stderr.write(`${message}\n`)
+  logger.warn(
+    alert,
+    `[crawl-alert] ${alert.domain}: ${alert.blocked}/${alert.total} blocked (${Math.round(alert.rate * 100)}%)`,
+  )
 }
 
 export function setAlertEmitter(emitter: AlertEmitter): void {
