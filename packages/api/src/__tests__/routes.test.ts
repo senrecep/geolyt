@@ -37,11 +37,16 @@ describe('API routes', () => {
     await cleanupTables()
   })
 
-  it('GET /health returns ok', async () => {
+  it('GET /health returns ok with db and redis readiness', async () => {
     const response = await app.fetch(new Request('http://localhost/health'))
     expect(response.status).toBe(200)
-    const body = (await response.json()) as { status: string }
+    const body = (await response.json()) as {
+      status: string
+      checks: { database: string; redis: string }
+    }
     expect(body.status).toBe('ok')
+    expect(body.checks.database).toBe('ok')
+    expect(body.checks.redis).toBe('ok')
   })
 
   it('POST /audits rejects requests without an API key', async () => {
