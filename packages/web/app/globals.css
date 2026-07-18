@@ -23,3 +23,61 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+.markdown-report h1,
+.markdown-report h2,
+.markdown-report h3 {
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-report h1 {
+  font-size: 1.5rem;
+}
+
+.markdown-report h2 {
+  font-size: 1.25rem;
+}
+
+.markdown-report h3 {
+  font-size: 1.1rem;
+}
+
+.markdown-report p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.markdown-report ul,
+.markdown-report ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.markdown-report li {
+  margin-bottom: 0.25em;
+  line-height: 1.6;
+}
+
+.markdown-report code {
+  background-color: var(--color-muted);
+  border-radius: 0.25em;
+  padding: 0.15em 0.35em;
+  font-size: 0.9em;
+}
+
+.markdown-report a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.markdown-report blockquote {
+  border-left: 2px solid var(--color-border);
+  padding-left: 1em;
+  color: var(--color-muted-foreground);
+}
+
+.markdown-report > *:first-child {
+  margin-top: 0;
+}

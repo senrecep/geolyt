@@ -14,6 +14,7 @@
     "@geolyt/shared": "workspace:*",
     "@tailwindcss/postcss": "^4.3.2",
     "better-auth": "^1.6.23",
+    "marked": "^18.0.6",
     "next": "^16.0.0",
     "postcss": "^8.5.19",
     "react": "^19.0.0",

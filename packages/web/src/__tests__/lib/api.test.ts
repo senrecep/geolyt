@@ -5,6 +5,7 @@ import {
   fetchClient,
   fetchClientByDomain,
   fetchReport,
+  fetchReportMarkdown,
 } from '../../../lib/api'
 
 const mockAudit = {
@@ -115,5 +116,27 @@ describe('fetchReport', () => {
   it('throws when the report is not ready', async () => {
     global.fetch = mockFetch({ error: 'Report not ready' }, 404) as unknown as typeof fetch
     await expect(fetchReport('missing', mockCookie)).rejects.toThrow('Report not ready')
+  })
+})
+
+describe('fetchReportMarkdown', () => {
+  it('returns the raw markdown text on success', async () => {
+    const markdown = '# GEO Audit Report\n\n**GEO Score:** 82/100'
+    global.fetch = (async (_url: string) => {
+      return new Response(markdown, { status: 200 })
+    }) as unknown as typeof fetch
+
+    const content = await fetchReportMarkdown('https://cdn.example.com/reports/a1b2c3d4/report.md')
+    expect(content).toBe(markdown)
+  })
+
+  it('throws when the storage fetch fails', async () => {
+    global.fetch = (async (_url: string) => {
+      return new Response('', { status: 404 })
+    }) as unknown as typeof fetch
+
+    await expect(
+      fetchReportMarkdown('https://cdn.example.com/reports/missing/report.md'),
+    ).rejects.toThrow('404')
   })
 })

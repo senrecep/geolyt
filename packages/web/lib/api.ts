@@ -24,7 +24,7 @@ interface ReportInfo {
   audit_id: string
   format: string
   storage_key: string
-  public_url: string
+  public_url: string | null
 }
 
 function buildHeaders(cookie?: string): HeadersInit {
@@ -109,4 +109,14 @@ export async function fetchReport(auditId: string, cookie?: string): Promise<Rep
   }
 
   return data
+}
+
+export async function fetchReportMarkdown(publicUrl: string): Promise<string> {
+  const response = await fetch(publicUrl, { next: { revalidate: 5 } })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch report markdown: ${response.status}`)
+  }
+
+  return response.text()
 }
