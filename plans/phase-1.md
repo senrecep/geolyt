@@ -8,7 +8,7 @@
 
 - [x] `POST /audits` returns 202 with audit_id
 - [x] `GET /audits/:id` returns status + result when complete
-- [x] Citability scorer output matches Python original within ±5 points (parity test)
+- [x] Citability scorer regression-locked against golden fixture (±5 points) — no Python original exists in-repo; `tests/parity/citability-golden.json` documents itself as a TypeScript-derived regression snapshot, not a ported Python parity test
 - [x] 403 response from Firecrawl → audit continues with `GEO.CrawlerBlocked` finding
 - [x] `electron-srl.com` golden test produces valid AuditResult JSON (`packages/core/tests/parity/electron-srl-golden.test.ts`)
 
@@ -34,7 +34,7 @@
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 
 #### packages/core — Collectors
-- [x] `src/collectors/fetch-html.ts` — plain fetch (no JS) + Playwright fallback trigger
+- [x] `src/collectors/fetch-html.ts` — plain fetch (no JS); JS-rendered pages are detected (`GeoErr.jsRenderedOnly`) and scored as a finding rather than fetched with a headless browser here (see Notes)
 - [x] `src/collectors/collect-page.ts` — Firecrawl → ResultAsync<PageData>
 - [x] `src/collectors/collect-robots.ts` — robots.txt → ResultAsync<string|null>
 - [x] `src/collectors/collect-llmstxt.ts` — llms.txt → ResultAsync<string|null>
@@ -45,7 +45,7 @@
 
 #### packages/core — Scorers
 - [x] `src/scorers/citability.ts` — 5-dim scorer (Answer 30/Self 25/Struct 20/Stats 15/Unique 10)
-- [x] `src/scorers/robots-access.ts` — 14 crawlers, tier-weighted (50/25/15/10)
+- [x] `src/scorers/robots-access.ts` — 14 crawlers, tier-weighted (3 tiers: 50/25/25)
 - [x] `src/scorers/technical.ts` — 8 technical categories, Rule Engine
 - [x] `src/scorers/schema-org.ts` — JSON-LD validation, Rule Engine
 - [x] `src/scorers/llms-txt.ts` — presence + format validation
@@ -111,6 +111,7 @@
 ## Notes
 
 - `packages/db` was not in the original plan; it was added to avoid a circular dependency between `api` and `jobs`.
+- A separate Playwright fetch fallback (originally planned for `fetch-html.ts`) was dropped as redundant: JS rendering is handled by the self-hosted Firecrawl instance in `collect-page.ts`, and pages that are still JS-only after that pass are surfaced as a `GEO.JsRenderedOnly` finding instead of a second browser render.
 - Composite score in Phase 1 leaves `brandAuthority` and `contentQuality` at 0; these are implemented in Phase 2.
 - `better-auth` UI integration is deferred to Phase 2; Phase 1 only includes API key middleware.
 - All 65 unit tests pass; lint and typecheck are clean.

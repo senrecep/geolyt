@@ -7,7 +7,7 @@
 ## Acceptance Criteria
 
 - [x] AI synthesis produces executive summary + findings with Gemini
-- [x] Prompt caching verified (cache hit rate > 80% under load)
+- [-] Prompt caching verified (cache hit rate > 80% under load) — pending production measurement; Gemini implicit caching cannot be verified offline
 - [x] Cost per audit < $0.10 (measure actual AI token usage)
 - [x] Next.js dashboard shows audit list + score gauges + findings
 - [x] PDF report generates and uploads to Cloudflare R2
@@ -20,8 +20,8 @@
 - [x] `src/provider-chain.ts` — waterfall with circuit breaker (ioredis health tracking)
 - [x] `src/prompts/rubric.ts` — ~6k token cached GEO rubric (static, all audits)
 - [x] `src/prompts/evidence.ts` — per-audit evidence builder (variable part)
-- [x] `src/synthesis.ts` — generateObject() + cache_control ephemeral breakpoint
-- [x] `src/eeat-judge.ts` — Haiku-based E-E-A-T scoring
+- [x] `src/synthesis.ts` — generateObject() + Gemini implicit prompt caching (cached token counts captured from response usage metadata)
+- [x] `src/eeat-judge.ts` — E-E-A-T scoring wired to the primary scoring model (Gemini Flash-Lite via `scoringModels()[0]` in `packages/jobs/src/workers/score.ts`); Gemini runs on GCP credits so it's the cheaper choice — `claude-haiku-4-5` is only the narrative chain's final fallback
 - [x] Cost verification test: assert cached vs uncached token difference
 - **Owner:** Kimi Code CLI | **Date:** 2026-07-14
 

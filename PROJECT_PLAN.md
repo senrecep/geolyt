@@ -51,6 +51,7 @@ A GEO (Generative Engine Optimization) analysis service that analyzes any websit
 geolyt/
 ├── packages/
 │   ├── shared/       # Zod schemas + tsentials GeoErr codes + types
+│   ├── db/           # Drizzle schema + postgres-js client
 │   ├── core/         # Deterministic scorers (Result<T>) — no LLM
 │   ├── ai-core/      # Multi-provider AI synthesis (Vercel AI SDK)
 │   ├── api/          # Elysia REST API
@@ -89,18 +90,22 @@ GET /audits/:id → completed result
 
 ### Scoring Architecture
 
-**70% Deterministic (no AI cost):**
-- Citability: 5-dim (Answer 30% / Self-containment 25% / Structure 20% / Stats 15% / Uniqueness 10%)
-- Crawler access: 14 AI crawlers, tier-weighted (50%/25%/15%/10%)
-- Technical SEO: 8 categories (SSR, robots, canonical, security headers, etc.)
-- Schema.org: JSON-LD validation via Rule Engine
-- llms.txt: presence + validity check
+GEO Score is a 6-dimension weighted composite (`GEO_COMPOSITE_WEIGHTS` in `packages/shared/src/constants/weights.ts`):
 
-**30% AI (Gemini, cached prompt):**
-- E-E-A-T quality judgment
-- Executive summary
-- Findings narrative
-- Content rewrite suggestions
+| Dimension | Weight | Source |
+|---|---|---|
+| AI Citability & Visibility | 25% | Deterministic (5-dim citability scorer) |
+| Brand Authority Signals | 20% | Deterministic — Wikipedia/Wikidata/YouTube/Reddit lookups, Redis 7-day cache (`packages/core/src/collectors/brand-apis.ts`) |
+| Content Quality & E-E-A-T | 20% | AI judge (Gemini) |
+| Technical Foundations | 15% | Deterministic (8 categories: SSR, robots, canonical, security headers, etc.) |
+| Structured Data | 10% | Deterministic (JSON-LD validation via Rule Engine) |
+| Platform Optimization | 10% | Deterministic (llms.txt presence + validity) |
+
+Only Content Quality (20% of the total) calls an AI model — the remaining 80% is deterministic, no-LLM scoring.
+
+Citability sub-weights: Answer block 30% / Self-containment 25% / Structural readability 20% / Statistical density 15% / Uniqueness 10%.
+
+Crawler access: 14 AI crawlers across 3 tiers, tier-weighted 50%/25%/25%.
 
 **Cost per audit:** ~$0.03-0.08 (cached GEO rubric = ~6k tokens, constant across all audits)
 
@@ -159,8 +164,19 @@ const hasSSR: Rule<PageData> = ctx =>
 
 | Phase | Duration | Goal | Status |
 |---|---|---|---|
-| 1 — Core Engine | 2 weeks | Deterministic scorers + Elysia API + BullMQ + Firecrawl | 🔴 Not started |
-| 2 — AI + Dashboard | 4 weeks | Gemini synthesis + Next.js UI + PDF + R2 | 🔴 Not started |
-| 3 — Production | 8 weeks | White-label + Stripe + deltas + public links | 🔴 Not started |
+| 1 — Core Engine | 2 weeks | Deterministic scorers + Elysia API + BullMQ + Firecrawl | 🟢 Complete (2026-07-14) |
+| 2 — AI + Dashboard | 4 weeks | Gemini synthesis + Next.js UI + PDF + R2 | 🟢 Complete (2026-07-15) |
+| 3 — Production | 8 weeks | White-label + Stripe + deltas + public links | 🟢 Complete (2026-07-15) |
+
+### Production additions beyond original plan
+
+- Stripe billing (metered usage + webhooks)
+- White-label + custom-domain CNAME resolution
+- Monthly re-audit scheduler
+- Crawl-failure alerting
+- Per-domain rate limiting
+- API-key auth
+- OpenTelemetry tracing
+- CI + backup + Dokploy deploy tooling
 
 See `plans/` directory for detailed phase breakdowns.
