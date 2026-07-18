@@ -1,5 +1,7 @@
 import { Elysia, t } from 'elysia'
 import type Stripe from 'stripe'
+import { Err } from 'tsentials/errors'
+import { Result } from 'tsentials/result'
 import { createStripeClient } from '../billing/stripe.js'
 import { handleStripeEvent, stripeWebhookSecret } from '../billing/webhooks.js'
 
@@ -19,15 +21,16 @@ export const webhooksRoute = new Elysia({ prefix: '/webhooks' }).post(
     }
 
     const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY)
-    let event: Stripe.Event
-    try {
-      event = stripe.webhooks.constructEvent(body as string, signature, secret)
-    } catch (error) {
+    const parsedEvent: Result<Stripe.Event> = Result.try(
+      () => stripe.webhooks.constructEvent(body as string, signature, secret),
+      (error) => Err.unexpected('StripeWebhook.InvalidSignature', `Invalid signature: ${error}`),
+    )
+    if (!parsedEvent.ok) {
       set.status = 400
-      return { error: `Invalid signature: ${error}` }
+      return { error: parsedEvent.errors.map((error) => error.description).join(', ') }
     }
 
-    const result = await handleStripeEvent(event).toResult()
+    const result = await handleStripeEvent(parsedEvent.value).toResult()
     if (!result.ok) {
       set.status = 500
       return { error: result.errors.map((error) => error.description).join(', ') }

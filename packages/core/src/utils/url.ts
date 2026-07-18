@@ -30,31 +30,26 @@ export function isPrivateIpAddress(ip: string): boolean {
 }
 
 export function isPrivateUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    const hostname = parsed.hostname
-
-    if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1') {
-      return true
-    }
-
-    if (isPrivateIpAddress(hostname)) {
-      return true
-    }
-
-    return false
-  } catch {
+  if (!URL.canParse(url)) {
     return true
   }
+
+  const parsed = new URL(url)
+  const hostname = parsed.hostname
+
+  if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1') {
+    return true
+  }
+
+  return isPrivateIpAddress(hostname)
 }
 
 export function validateTargetUrl(url: string): Result<string> {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
+  if (!URL.canParse(url)) {
     return Result.failure(GeoErr.invalidUrl(url))
   }
+
+  const parsed = new URL(url)
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return Result.failure(GeoErr.invalidUrl(url))

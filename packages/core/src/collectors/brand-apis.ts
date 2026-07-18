@@ -1,7 +1,7 @@
 import type { Finding } from '@geolyt/shared'
 import type { Redis } from 'ioredis'
 import { Err } from 'tsentials/errors'
-import { Result } from 'tsentials/result'
+import { Result, ResultAsync } from 'tsentials/result'
 
 export interface BrandMention {
   platform: 'wikipedia' | 'wikidata' | 'youtube' | 'reddit'
@@ -176,58 +176,58 @@ export async function scoreBrandAuthority(
   if (redis) {
     const cached = await redis.get(cache)
     if (cached) {
-      try {
-        return Result.success(JSON.parse(cached) as BrandAuthorityOutput)
-      } catch {
-        // ignore corrupt cache and continue
+      const parsed = Result.try(() => JSON.parse(cached) as BrandAuthorityOutput)
+      if (parsed.ok) {
+        return parsed
       }
+      // ignore corrupt cache and continue
     }
   }
 
-  try {
-    const term = brandNameFromDomain(domain)
-    const [wikipedia, wikidata, youtube, reddit] = await Promise.all([
-      searchWikipedia(term, fetcher),
-      searchWikidata(term, fetcher),
-      searchYouTube(term, youtubeApiKey, fetcher),
-      searchReddit(term, fetcher),
-    ])
+  return ResultAsync.try(
+    async () => {
+      const term = brandNameFromDomain(domain)
+      const [wikipedia, wikidata, youtube, reddit] = await Promise.all([
+        searchWikipedia(term, fetcher),
+        searchWikidata(term, fetcher),
+        searchYouTube(term, youtubeApiKey, fetcher),
+        searchReddit(term, fetcher),
+      ])
 
-    const mentions = [...wikipedia, ...wikidata, ...youtube, ...reddit]
-    const score = computeScore(mentions)
+      const mentions = [...wikipedia, ...wikidata, ...youtube, ...reddit]
+      const score = computeScore(mentions)
 
-    const findings: Finding[] = []
-    if (mentions.length === 0) {
-      findings.push({
-        code: 'BRAND.NoMentions',
-        title: 'No brand mentions found',
-        description: `No entity mentions found for ${term} on Wikipedia, Wikidata, YouTube, or Reddit.`,
-        severity: 'high',
-        recommendation:
-          'Create or claim a Wikipedia page, Wikidata item, YouTube channel, or Reddit presence.',
-      })
-    } else {
-      findings.push({
-        code: 'BRAND.MentionsFound',
-        title: `Found ${mentions.length} brand mention(s)`,
-        description: `Detected presence on ${mentions.map((m) => m.platform).join(', ')}.`,
-        severity: 'info',
-      })
-    }
+      const findings: Finding[] = []
+      if (mentions.length === 0) {
+        findings.push({
+          code: 'BRAND.NoMentions',
+          title: 'No brand mentions found',
+          description: `No entity mentions found for ${term} on Wikipedia, Wikidata, YouTube, or Reddit.`,
+          severity: 'high',
+          recommendation:
+            'Create or claim a Wikipedia page, Wikidata item, YouTube channel, or Reddit presence.',
+        })
+      } else {
+        findings.push({
+          code: 'BRAND.MentionsFound',
+          title: `Found ${mentions.length} brand mention(s)`,
+          description: `Detected presence on ${mentions.map((m) => m.platform).join(', ')}.`,
+          severity: 'info',
+        })
+      }
 
-    const output: BrandAuthorityOutput = { score, findings, mentions }
+      const output: BrandAuthorityOutput = { score, findings, mentions }
 
-    if (redis) {
-      await redis.set(cache, JSON.stringify(output), 'EX', 60 * 60 * 24 * 7)
-    }
+      if (redis) {
+        await redis.set(cache, JSON.stringify(output), 'EX', 60 * 60 * 24 * 7)
+      }
 
-    return Result.success(output)
-  } catch (error) {
-    return Result.failure(
+      return output
+    },
+    (error) =>
       Err.unexpected(
         'BRAND.FetchFailed',
         error instanceof Error ? error.message : 'Brand mention lookup failed',
       ),
-    )
-  }
+  )
 }

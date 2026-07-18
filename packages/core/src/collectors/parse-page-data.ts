@@ -10,11 +10,11 @@ function parseStructuredData($: cheerio.CheerioAPI): Record<string, unknown>[] {
   $('script[type="application/ld+json"]').each((_, element) => {
     const raw = $(element).html()
     if (!raw) return
-    try {
-      data.push(JSON.parse(raw))
-    } catch {
-      // Skip malformed JSON-LD blocks.
+    const parsed = Result.try(() => JSON.parse(raw) as Record<string, unknown>)
+    if (parsed.ok) {
+      data.push(parsed.value)
     }
+    // Skip malformed JSON-LD blocks.
   })
 
   return data

@@ -27,11 +27,10 @@ type FetchResult = {
 }
 
 function sameHostname(a: string, b: string): boolean {
-  try {
-    return new URL(a).hostname === new URL(b).hostname
-  } catch {
+  if (!URL.canParse(a) || !URL.canParse(b)) {
     return false
   }
+  return new URL(a).hostname === new URL(b).hostname
 }
 
 async function fetchWithRedirects(
