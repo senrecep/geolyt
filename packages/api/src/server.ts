@@ -1,4 +1,4 @@
-import { logger } from '@geolyt/shared'
+import { logger } from '@geolyt/shared/logger'
 import { createApp } from './index.js'
 import { initTracing } from './tracing.js'
 

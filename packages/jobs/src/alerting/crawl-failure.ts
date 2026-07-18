@@ -1,4 +1,4 @@
-import { logger } from '@geolyt/shared'
+import { logger } from '@geolyt/shared/logger'
 import type { Redis } from 'ioredis'
 import { Err } from 'tsentials/errors'
 import { Result, ResultAsync } from 'tsentials/result'

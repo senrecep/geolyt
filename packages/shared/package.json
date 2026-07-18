@@ -17,5 +17,9 @@
   "devDependencies": {
     "@opentelemetry/sdk-trace-base": "^2.9.0",
     "typescript": "^5.7.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./logger": "./src/logger.ts"
   }
 }

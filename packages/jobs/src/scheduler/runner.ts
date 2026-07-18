@@ -1,4 +1,4 @@
-import { logger } from '@geolyt/shared'
+import { logger } from '@geolyt/shared/logger'
 import { scheduleMonthlyReAudits } from './monthly-audit.js'
 
 export function startMonthlyReAuditScheduler(): void {
