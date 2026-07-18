@@ -1,10 +1,11 @@
-import { apiKeys, auditResults, audits, clients, db, reports } from '@geolyt/db'
+import { apiKeys, auditResults, audits, clients, db, reports, usage } from '@geolyt/db'
 import { enqueueAudit, reportQueue } from '@geolyt/jobs'
 import { AuditJobInput } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
+import { ResultAsync } from 'tsentials/result'
 import { auth } from '../auth.js'
-import { checkQuota } from '../billing/quota.js'
+import { checkQuota, currentPeriod } from '../billing/quota.js'
 import { createStripeClient, reportUsage } from '../billing/stripe.js'
 
 function setClientId(set: Record<string, unknown>, clientId: string | null): void {
@@ -45,14 +46,15 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
       const input = AuditJobInput.parse(body)
       const clientId = getClientId(set)
 
-      if (clientId) {
-        const client = await db.query.clients.findFirst({
-          where: eq(clients.id, clientId),
-        })
-        if (client && !(await checkQuota(clientId, client.monthlyQuota ?? 0))) {
-          set.status = 429
-          return { error: 'Monthly audit quota exceeded' }
-        }
+      const client = clientId
+        ? await db.query.clients.findFirst({
+            where: eq(clients.id, clientId),
+          })
+        : null
+
+      if (clientId && client && !(await checkQuota(clientId, client.monthlyQuota ?? 0))) {
+        set.status = 429
+        return { error: 'Monthly audit quota exceeded' }
       }
 
       const inserted = await db
@@ -78,16 +80,18 @@ export const auditsRoute = new Elysia({ prefix: '/audits' })
       })
 
       if (clientId) {
-        const client = await db.query.clients.findFirst({
-          where: eq(clients.id, clientId),
+        await db.insert(usage).values({
+          clientId,
+          auditId: audit.id,
+          period: currentPeriod(),
+          audits: 1,
         })
+
         if (client?.stripeSubscriptionItemId && process.env.STRIPE_SECRET_KEY) {
-          try {
-            const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY)
-            await reportUsage(stripe, client.stripeSubscriptionItemId, 1)
-          } catch {
-            // Stripe reporting is best-effort; do not fail the audit request.
-          }
+          const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY)
+          const subscriptionItemId = client.stripeSubscriptionItemId
+          // Stripe reporting is best-effort; do not fail the audit request.
+          await ResultAsync.try(() => reportUsage(stripe, subscriptionItemId, 1)).toResult()
         }
       }
 

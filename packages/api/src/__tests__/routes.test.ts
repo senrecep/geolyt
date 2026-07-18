@@ -1,9 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { apiKeys, auditResults, audits, clients, db, reports, usage } from '@geolyt/db'
-import { currentPeriod } from '../billing/quota.js'
+import { and, eq } from 'drizzle-orm'
+import { currentPeriod, getCurrentUsage } from '../billing/quota.js'
 import { createApp } from '../index.js'
 
 const API_KEY = 'test-api-key-geolyt'
+const QUOTA_API_KEY = 'test-api-key-geolyt-quota'
+const QUOTA_EMAIL = 'quota-route@example.com'
 
 async function setupApiKey(): Promise<string> {
   const inserted = await db
@@ -84,21 +87,40 @@ describe('API routes', () => {
     expect(['pending', 'collecting']).toContain(getBody.status)
   })
 
-  it('POST /audits returns 429 when the monthly quota is exceeded', async () => {
-    await db.insert(usage).values({
-      clientId,
-      period: currentPeriod(),
-      audits: 5,
-    })
+  it('POST /audits enforces the monthly quota via real usage tracking (no manual usage insert)', async () => {
+    const inserted = await db
+      .insert(clients)
+      .values({ name: 'Quota client', email: QUOTA_EMAIL, monthlyQuota: 2 })
+      .returning()
+    const quotaClientId = inserted[0]?.id ?? ''
+    const hash = await Bun.password.hash(QUOTA_API_KEY)
+    await db.insert(apiKeys).values({ name: 'Quota key', keyHash: hash, clientId: quotaClientId })
 
-    const response = await app.fetch(
-      new Request('http://localhost/audits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-        body: JSON.stringify({ url: 'https://example.com', reportFormat: 'pdf' }),
-      }),
-    )
-    expect(response.status).toBe(429)
+    const postAudit = () =>
+      app.fetch(
+        new Request('http://localhost/audits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': QUOTA_API_KEY },
+          body: JSON.stringify({ url: 'https://example.com', reportFormat: 'pdf' }),
+        }),
+      )
+
+    const first = await postAudit()
+    expect(first.status).toBe(202)
+    const second = await postAudit()
+    expect(second.status).toBe(202)
+
+    expect(await getCurrentUsage(quotaClientId, currentPeriod())).toBe(2)
+
+    const third = await postAudit()
+    expect(third.status).toBe(429)
+
+    const usageRows = await db
+      .select()
+      .from(usage)
+      .where(and(eq(usage.clientId, quotaClientId), eq(usage.period, currentPeriod())))
+    expect(usageRows).toHaveLength(2)
+    expect(usageRows.every((row) => row.audits === 1)).toBe(true)
   })
 
   it('GET /clients/me returns the authenticated client', async () => {

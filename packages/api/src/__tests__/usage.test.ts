@@ -22,13 +22,24 @@ describe('usage route', () => {
     const hash = await Bun.password.hash(API_KEY)
     await db.insert(apiKeys).values({ name: 'Test key', keyHash: hash, clientId })
 
-    await db.insert(usage).values({
-      clientId,
-      period: '2026-07',
-      aiTokensCached: 1_000_000,
-      aiTokensUncached: 1_000_000,
-      aiTokensOutput: 500_000,
-    })
+    await db.insert(usage).values([
+      {
+        clientId,
+        period: '2026-07',
+        model: 'gemini-3.5-flash',
+        aiTokensCached: 1_000_000,
+        aiTokensUncached: 1_000_000,
+        aiTokensOutput: 500_000,
+      },
+      {
+        clientId,
+        period: '2026-07',
+        model: 'claude-haiku-4-5',
+        aiTokensCached: 0,
+        aiTokensUncached: 200_000,
+        aiTokensOutput: 100_000,
+      },
+    ])
   })
 
   afterAll(async () => {
@@ -48,11 +59,31 @@ describe('usage route', () => {
       estimated_cost_usd: number
       cache_hit_rate: number
       ai_tokens: { cached: number; uncached: number; output: number }
+      by_model: Array<{
+        model: string
+        cached: number
+        uncached: number
+        output: number
+        estimated_cost_usd: number
+      }>
     }
     expect(body.ai_tokens.cached).toBe(1_000_000)
-    expect(body.ai_tokens.uncached).toBe(1_000_000)
-    expect(body.ai_tokens.output).toBe(500_000)
-    expect(body.cache_hit_rate).toBe(0.5)
+    expect(body.ai_tokens.uncached).toBe(1_200_000)
+    expect(body.ai_tokens.output).toBe(600_000)
     expect(body.estimated_cost_usd).toBeGreaterThan(0)
+
+    expect(body.by_model).toHaveLength(2)
+    const flash = body.by_model.find((m) => m.model === 'gemini-3.5-flash')
+    const haiku = body.by_model.find((m) => m.model === 'claude-haiku-4-5')
+    expect(flash).toBeDefined()
+    expect(flash?.cached).toBe(1_000_000)
+    expect(flash?.uncached).toBe(1_000_000)
+    expect(flash?.output).toBe(500_000)
+    expect(flash?.estimated_cost_usd).toBeGreaterThan(0)
+    expect(haiku).toBeDefined()
+    expect(haiku?.cached).toBe(0)
+    expect(haiku?.uncached).toBe(200_000)
+    expect(haiku?.output).toBe(100_000)
+    expect(haiku?.estimated_cost_usd).toBeGreaterThan(0)
   })
 })

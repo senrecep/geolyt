@@ -92,8 +92,10 @@ export const usage = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     clientId: uuid('client_id').references(() => clients.id),
+    auditId: uuid('audit_id').references(() => audits.id, { onDelete: 'set null' }),
     period: text('period').notNull(),
     audits: integer('audits').notNull().default(0),
+    model: text('model'),
     aiTokensCached: integer('ai_tokens_cached').default(0),
     aiTokensUncached: integer('ai_tokens_uncached').default(0),
     aiTokensOutput: integer('ai_tokens_output').default(0),

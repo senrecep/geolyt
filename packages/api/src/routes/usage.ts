@@ -1,6 +1,6 @@
 import { estimateCost } from '@geolyt/ai-core'
 import { apiKeys, clients, db } from '@geolyt/db'
-import type { AiUsage } from '@geolyt/shared'
+import { type AiUsage, emptyAiUsage } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia } from 'elysia'
 import { auth } from '../auth.js'
@@ -54,11 +54,35 @@ export const usageRoute = new Elysia({ prefix: '/usage' }).get('/', async ({ req
     cachedPromptTokens: cached,
     completionTokens: output,
   }
-  const cost = estimateCost(total)
   const cacheHitRate =
     total.promptTokens === 0
       ? 0
       : Math.round((total.cachedPromptTokens / total.promptTokens) * 1000) / 1000
+
+  const byModelUsage = new Map<string, AiUsage>()
+  for (const row of rows) {
+    if (!row.model) {
+      continue
+    }
+    const modelUsage = byModelUsage.get(row.model) ?? emptyAiUsage()
+    const rowCached = row.aiTokensCached ?? 0
+    const rowUncached = row.aiTokensUncached ?? 0
+    modelUsage.cachedPromptTokens += rowCached
+    modelUsage.promptTokens += rowCached + rowUncached
+    modelUsage.completionTokens += row.aiTokensOutput ?? 0
+    byModelUsage.set(row.model, modelUsage)
+  }
+
+  // Pricing varies per model, so the aggregate cost is the sum of each
+  // model's cost computed at its own rate rather than a blended estimate.
+  const byModel = Array.from(byModelUsage.entries()).map(([model, modelUsage]) => ({
+    model,
+    cached: modelUsage.cachedPromptTokens,
+    uncached: modelUsage.promptTokens - modelUsage.cachedPromptTokens,
+    output: modelUsage.completionTokens,
+    estimated_cost_usd: estimateCost(modelUsage, model),
+  }))
+  const cost = byModel.reduce((sum, m) => sum + m.estimated_cost_usd, 0)
 
   return {
     period_days: 30,
@@ -69,6 +93,7 @@ export const usageRoute = new Elysia({ prefix: '/usage' }).get('/', async ({ req
     },
     estimated_cost_usd: cost,
     cache_hit_rate: cacheHitRate,
+    by_model: byModel,
     records: rows.map((row) => ({
       period: row.period,
       cached: row.aiTokensCached ?? 0,
