@@ -19,7 +19,9 @@
     "postcss": "^8.5.19",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "tsentials": "^0.1.10",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

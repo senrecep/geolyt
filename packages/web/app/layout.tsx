@@ -1,5 +1,5 @@
 import { fetchClient } from '@/lib/api'
-import { WhiteLabelConfig } from '@geolyt/shared'
+import { parseWhiteLabelCookie } from '@/lib/white-label'
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { Header } from './_components/header'
@@ -17,7 +17,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const cookieValue = cookieStore.get('x-geolyt-white-label')?.value
-  const parsedCookie = cookieValue ? WhiteLabelConfig.safeParse(JSON.parse(cookieValue)).data : null
+  const parsedCookie = cookieValue ? parseWhiteLabelCookie(cookieValue) : null
   const client = parsedCookie ? null : await fetchClient(cookieStore.toString()).catch(() => null)
   const config = parsedCookie ?? client?.white_label_config
 
