@@ -33,6 +33,7 @@ describe('sites route', () => {
   let siteId: string
   let auditAId: string
   let auditBId: string
+  let deltaId: string
 
   beforeAll(async () => {
     const insertedClient = await db
@@ -96,6 +97,7 @@ describe('sites route', () => {
     )
     expect(response.status).toBe(200)
     const body = (await response.json()) as {
+      id: string
       score_change: { composite: number }
       audit_a_id: string
       audit_b_id: string
@@ -103,6 +105,7 @@ describe('sites route', () => {
     expect(body.audit_a_id).toBe(auditAId)
     expect(body.audit_b_id).toBe(auditBId)
     expect(body.score_change.composite).toBe(15)
+    deltaId = body.id
   })
 
   it('GET /sites/:id/deltas returns the list of deltas', async () => {
@@ -115,6 +118,30 @@ describe('sites route', () => {
     const body = (await response.json()) as Array<{ score_change: { composite: number } }>
     expect(body).toHaveLength(1)
     expect(body[0]?.score_change.composite).toBe(15)
+  })
+
+  it('GET /sites/:id/deltas/:deltaId/report renders the delta report html', async () => {
+    const response = await app.fetch(
+      new Request(`http://localhost/sites/${siteId}/deltas/${deltaId}/report`, {
+        headers: { 'x-api-key': API_KEY },
+      }),
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('text/html')
+    const html = await response.text()
+    expect(html).toContain('Score improved from 50 to 65 (+15 pts)')
+  })
+
+  it('GET /sites/:id/deltas/:deltaId/report returns 404 for an unknown delta', async () => {
+    const response = await app.fetch(
+      new Request(
+        `http://localhost/sites/${siteId}/deltas/00000000-0000-0000-0000-000000000000/report`,
+        {
+          headers: { 'x-api-key': API_KEY },
+        },
+      ),
+    )
+    expect(response.status).toBe(404)
   })
 
   it('POST /sites/:id/deltas returns 422 with fewer than two completed audits', async () => {

@@ -1,5 +1,7 @@
 import { calculateScoreChange } from '@geolyt/core'
-import { apiKeys, auditDeltas, audits, clients, db, sites } from '@geolyt/db'
+import { apiKeys, auditDeltas, auditResults, audits, clients, db, sites } from '@geolyt/db'
+import { buildDeltaReportHtml } from '@geolyt/jobs'
+import type { AuditResult } from '@geolyt/shared'
 import { eq } from 'drizzle-orm'
 import { Elysia, t } from 'elysia'
 import { auth } from '../auth.js'
@@ -63,6 +65,61 @@ export const sitesRoute = new Elysia({ prefix: '/sites' })
     {
       params: t.Object({
         id: t.String({ format: 'uuid' }),
+      }),
+    },
+  )
+  .get(
+    '/:id/deltas/:deltaId/report',
+    async ({ params: { id, deltaId }, request, set }) => {
+      const clientId = await resolveClientId(request.headers)
+      if (!clientId) {
+        set.status = 401
+        return { error: 'Unauthorized' }
+      }
+
+      const site = await db.query.sites.findFirst({
+        where: eq(sites.id, id),
+      })
+      if (!site || site.clientId !== clientId) {
+        set.status = 404
+        return { error: 'Site not found' }
+      }
+
+      const delta = await db.query.auditDeltas.findFirst({
+        where: eq(auditDeltas.id, deltaId),
+      })
+      if (!delta || delta.siteId !== id) {
+        set.status = 404
+        return { error: 'Delta not found' }
+      }
+
+      const [resultA, resultB] = await Promise.all([
+        db.query.auditResults.findFirst({ where: eq(auditResults.auditId, delta.auditAId) }),
+        db.query.auditResults.findFirst({ where: eq(auditResults.auditId, delta.auditBId) }),
+      ])
+      if (!resultA || !resultB) {
+        set.status = 404
+        return { error: 'Delta not found' }
+      }
+
+      const auditA: AuditResult = {
+        ...resultA.data,
+        generatedAt: new Date(resultA.data.generatedAt),
+      }
+      const auditB: AuditResult = {
+        ...resultB.data,
+        generatedAt: new Date(resultB.data.generatedAt),
+      }
+
+      const html = buildDeltaReportHtml({ auditA, auditB, delta })
+
+      set.headers['Content-Type'] = 'text/html; charset=utf-8'
+      return html
+    },
+    {
+      params: t.Object({
+        id: t.String({ format: 'uuid' }),
+        deltaId: t.String({ format: 'uuid' }),
       }),
     },
   )
