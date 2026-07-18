@@ -51,6 +51,12 @@ jobs:
           POSTGRES_URL: postgres://geolyt:geolyt@localhost:5432/geolyt
           REDIS_URL: redis://localhost:6379
 
+      - name: Push database schema
+        working-directory: packages/db
+        run: bunx drizzle-kit push --force
+        env:
+          POSTGRES_URL: postgres://geolyt:geolyt@localhost:5432/geolyt
+
       - name: Test
         run: bun test
         env:
