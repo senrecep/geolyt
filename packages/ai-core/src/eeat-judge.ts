@@ -1,9 +1,11 @@
 import type { AiUsage, Finding, PageData } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Err } from 'tsentials/errors'
-import { Result } from 'tsentials/result'
+import { type Result, ResultAsync } from 'tsentials/result'
 import { z } from 'zod'
+import { thinkingProviderOptions, thinkingTierForModel } from './models.js'
 import { eeatRubric } from './prompts/eeat-rubric.js'
+import { extractCachedPromptTokens } from './usage.js'
 
 const EeatOutputSchema = z.object({
   score: z.number().min(0).max(100),
@@ -38,18 +40,19 @@ async function defaultGenerate(
   args: EeatGenerateObjectArgs,
 ): Promise<{ object: EeatOutput; usage: AiUsage }> {
   const { generateObject } = await import('ai')
-  const { object, usage } = await generateObject({
+  const { object, usage, response } = await generateObject({
     model: args.model,
     system: args.system,
     prompt: args.prompt,
     schema: args.schema,
+    providerOptions: thinkingProviderOptions(thinkingTierForModel(args.model.modelId)),
   })
   return {
     object,
     usage: {
       promptTokens: usage.promptTokens,
       completionTokens: usage.completionTokens,
-      cachedPromptTokens: 0,
+      cachedPromptTokens: extractCachedPromptTokens(response.body),
     },
   }
 }
@@ -82,20 +85,20 @@ export async function judgeEeat(
   model: LanguageModel,
   generate: EeatGenerateObjectFn = defaultGenerate,
 ): Promise<Result<EeatJudgeResult>> {
-  try {
-    const { object, usage } = await generate({
-      model,
-      system: eeatRubric,
-      prompt: buildEeatPrompt(pageData),
-      schema: EeatOutputSchema,
-    })
-    return Result.success({ output: object, usage })
-  } catch (error) {
-    return Result.failure(
+  return ResultAsync.try(
+    async () => {
+      const { object, usage } = await generate({
+        model,
+        system: eeatRubric,
+        prompt: buildEeatPrompt(pageData),
+        schema: EeatOutputSchema,
+      })
+      return { output: object, usage }
+    },
+    (error) =>
       Err.unexpected(
         'AI.EeatJudgeFailed',
         error instanceof Error ? error.message : 'E-E-A-T judge failed',
       ),
-    )
-  }
+  )
 }

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { narrativeModels, scoringModels } from '../models.js'
+import {
+  narrativeModels,
+  scoringModels,
+  thinkingProviderOptions,
+  thinkingTierForModel,
+} from '../models.js'
 
 describe('models', () => {
   const originalEnv = { ...process.env }
@@ -35,5 +40,31 @@ describe('models', () => {
   it('throws when google api key is missing', () => {
     process.env.GOOGLE_AI_API_KEY = undefined
     expect(() => scoringModels()).toThrow('GOOGLE_AI_API_KEY is not set')
+  })
+})
+
+describe('thinkingTierForModel', () => {
+  it('returns minimal for flash-tier models', () => {
+    expect(thinkingTierForModel('gemini-3.1-flash-lite')).toBe('minimal')
+    expect(thinkingTierForModel('gemini-3.5-flash')).toBe('minimal')
+  })
+
+  it('returns low for pro-tier and non-flash models', () => {
+    expect(thinkingTierForModel('gemini-3.1-pro-preview')).toBe('low')
+    expect(thinkingTierForModel('claude-haiku-4-5')).toBe('low')
+  })
+})
+
+describe('thinkingProviderOptions', () => {
+  it('maps minimal to a small thinking budget', () => {
+    expect(thinkingProviderOptions('minimal')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 128 } },
+    })
+  })
+
+  it('maps low to a larger thinking budget', () => {
+    expect(thinkingProviderOptions('low')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 1024 } },
+    })
   })
 })

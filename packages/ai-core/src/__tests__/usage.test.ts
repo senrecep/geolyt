@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { calculateCacheHitRate, estimateCost } from '../usage.js'
+import { calculateCacheHitRate, estimateCost, extractCachedPromptTokens } from '../usage.js'
 
 describe('estimateCost', () => {
   it('costs less than $0.10 for a typical cached audit synthesis', () => {
@@ -35,6 +35,48 @@ describe('estimateCost', () => {
     }
 
     expect(estimateCost(cached)).toBeLessThan(estimateCost(uncached))
+  })
+})
+
+describe('estimateCost with a model', () => {
+  const usage = { promptTokens: 1_000_000, completionTokens: 1_000_000, cachedPromptTokens: 0 }
+
+  it('prices gemini-2.5-pro higher than gemini-2.5-flash-lite', () => {
+    expect(estimateCost(usage, 'gemini-2.5-pro')).toBeGreaterThan(
+      estimateCost(usage, 'gemini-2.5-flash-lite'),
+    )
+  })
+
+  it('falls back to flash-lite pricing for an unknown model', () => {
+    expect(estimateCost(usage, 'some-unknown-model')).toBe(
+      estimateCost(usage, 'gemini-2.5-flash-lite'),
+    )
+  })
+
+  it('matches the no-model default for backward compatibility', () => {
+    expect(estimateCost(usage)).toBe(estimateCost(usage, 'gemini-2.5-flash-lite'))
+  })
+})
+
+describe('extractCachedPromptTokens', () => {
+  it('reads cachedContentTokenCount from a Gemini raw response body', () => {
+    const body = { usageMetadata: { promptTokenCount: 100, cachedContentTokenCount: 42 } }
+    expect(extractCachedPromptTokens(body)).toBe(42)
+  })
+
+  it('returns 0 when usageMetadata is missing', () => {
+    expect(extractCachedPromptTokens({})).toBe(0)
+  })
+
+  it('returns 0 for a non-object response body', () => {
+    expect(extractCachedPromptTokens(undefined)).toBe(0)
+    expect(extractCachedPromptTokens(null)).toBe(0)
+    expect(extractCachedPromptTokens('raw text')).toBe(0)
+  })
+
+  it('returns 0 when cachedContentTokenCount is not a number', () => {
+    const body = { usageMetadata: { cachedContentTokenCount: 'not-a-number' } }
+    expect(extractCachedPromptTokens(body)).toBe(0)
   })
 })
 

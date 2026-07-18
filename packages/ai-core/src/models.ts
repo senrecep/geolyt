@@ -1,6 +1,6 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import type { LanguageModel } from 'ai'
+import type { JSONValue, LanguageModel } from 'ai'
 
 function googleApiKey(): string | undefined {
   return process.env.GOOGLE_AI_API_KEY
@@ -45,4 +45,31 @@ export function narrativeModels(): LanguageModel[] {
   }
 
   return models
+}
+
+export type ThinkingTier = 'minimal' | 'low'
+
+// The installed @ai-sdk/google provider (1.2.x) only forwards
+// `thinkingConfig.thinkingBudget` to the API — the newer `thinkingLevel`
+// enum (Gemini 3's minimal/low/high) isn't in its request schema and would
+// be silently dropped by zod during provider-options parsing. Map our
+// tiers to token budgets instead until the SDK is upgraded to a version
+// that supports thinkingLevel directly.
+const THINKING_BUDGET_BY_TIER: Record<ThinkingTier, number> = {
+  minimal: 128,
+  low: 1024,
+}
+
+export function thinkingTierForModel(modelId: string): ThinkingTier {
+  return modelId.toLowerCase().includes('flash') ? 'minimal' : 'low'
+}
+
+export function thinkingProviderOptions(
+  tier: ThinkingTier,
+): Record<string, Record<string, JSONValue>> {
+  return {
+    google: {
+      thinkingConfig: { thinkingBudget: THINKING_BUDGET_BY_TIER[tier] },
+    },
+  }
 }

@@ -1,10 +1,12 @@
 import type { AiUsage, AuditResult, Finding } from '@geolyt/shared'
 import type { LanguageModel } from 'ai'
 import { Err } from 'tsentials/errors'
-import { Result } from 'tsentials/result'
+import { type Result, ResultAsync } from 'tsentials/result'
 import { z } from 'zod'
+import { thinkingProviderOptions, thinkingTierForModel } from './models.js'
 import { buildEvidence } from './prompts/evidence.js'
 import { geoRubric } from './prompts/rubric.js'
+import { extractCachedPromptTokens } from './usage.js'
 
 const SynthesisOutputSchema = z.object({
   executiveSummary: z.string().min(1),
@@ -40,18 +42,19 @@ async function defaultGenerate(
   args: GenerateObjectArgs,
 ): Promise<{ object: SynthesisOutput; usage: AiUsage }> {
   const { generateObject } = await import('ai')
-  const { object, usage } = await generateObject({
+  const { object, usage, response } = await generateObject({
     model: args.model,
     system: args.system,
     prompt: args.prompt,
     schema: args.schema,
+    providerOptions: thinkingProviderOptions(thinkingTierForModel(args.model.modelId)),
   })
   return {
     object,
     usage: {
       promptTokens: usage.promptTokens,
       completionTokens: usage.completionTokens,
-      cachedPromptTokens: 0,
+      cachedPromptTokens: extractCachedPromptTokens(response.body),
     },
   }
 }
@@ -66,20 +69,20 @@ export async function synthesize(
   model: LanguageModel,
   generate: GenerateObjectFn = defaultGenerate,
 ): Promise<Result<SynthesisResult>> {
-  try {
-    const { object, usage } = await generate({
-      model,
-      system: geoRubric,
-      prompt: buildEvidence(audit),
-      schema: SynthesisOutputSchema,
-    })
-    return Result.success({ output: object, usage })
-  } catch (error) {
-    return Result.failure(
+  return ResultAsync.try(
+    async () => {
+      const { object, usage } = await generate({
+        model,
+        system: geoRubric,
+        prompt: buildEvidence(audit),
+        schema: SynthesisOutputSchema,
+      })
+      return { output: object, usage }
+    },
+    (error) =>
       Err.unexpected(
         'AI.SynthesisFailed',
         error instanceof Error ? error.message : 'AI synthesis failed',
       ),
-    )
-  }
+  )
 }
