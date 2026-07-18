@@ -19,17 +19,25 @@ export function createR2Client(config: R2Config): S3Client {
   return new S3Client(clientConfig)
 }
 
-export function getR2ConfigFromEnv(): R2Config {
+export function getOptionalR2ConfigFromEnv(): R2Config | null {
   const endpoint = process.env.CLOUDFLARE_R2_ENDPOINT
   const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY
   const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_KEY
   const publicBaseUrl = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL
 
   if (!endpoint || !accessKeyId || !secretAccessKey || !publicBaseUrl) {
-    throw new Error('Missing Cloudflare R2 environment variables')
+    return null
   }
 
   return { endpoint, accessKeyId, secretAccessKey, publicBaseUrl }
+}
+
+export function getR2ConfigFromEnv(): R2Config {
+  const config = getOptionalR2ConfigFromEnv()
+  if (!config) {
+    throw new Error('Missing Cloudflare R2 environment variables')
+  }
+  return config
 }
 
 export async function uploadReport(

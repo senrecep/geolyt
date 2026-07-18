@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
-import { createR2Client, getR2ConfigFromEnv, uploadReport } from '../../storage/r2.js'
+import {
+  createR2Client,
+  getOptionalR2ConfigFromEnv,
+  getR2ConfigFromEnv,
+  uploadReport,
+} from '../../storage/r2.js'
 
 describe('r2 storage', () => {
   const originalEnv = { ...process.env }
@@ -18,6 +23,20 @@ describe('r2 storage', () => {
   it('throws when a required env variable is missing', () => {
     process.env.CLOUDFLARE_R2_ENDPOINT = undefined
     expect(() => getR2ConfigFromEnv()).toThrow('Missing Cloudflare R2 environment variables')
+  })
+
+  it('getOptionalR2ConfigFromEnv returns null when config is incomplete', () => {
+    process.env.CLOUDFLARE_R2_ENDPOINT = undefined
+    expect(getOptionalR2ConfigFromEnv()).toBeNull()
+  })
+
+  it('getOptionalR2ConfigFromEnv returns the config when complete', () => {
+    expect(getOptionalR2ConfigFromEnv()).toEqual({
+      endpoint: 'https://fake.r2.cloudflarestorage.com',
+      accessKeyId: 'fake-access-key',
+      secretAccessKey: 'fake-secret-key',
+      publicBaseUrl: 'https://cdn.example.com',
+    })
   })
 
   it('uploadReport sends PutObjectCommand and returns public url', async () => {
