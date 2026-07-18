@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { apiKeys, auditResults, audits, clients, db, reports, usage } from '@geolyt/db'
+import { AuditStatus } from '@geolyt/shared'
 import { and, eq } from 'drizzle-orm'
 import { currentPeriod, getCurrentUsage } from '../billing/quota.js'
 import { createApp } from '../index.js'
@@ -84,7 +85,9 @@ describe('API routes', () => {
     expect(getResponse.status).toBe(200)
     const getBody = (await getResponse.json()) as { audit_id: string; status: string }
     expect(getBody.audit_id).toBe(body.audit_id)
-    expect(['pending', 'collecting']).toContain(getBody.status)
+    // Workers boot alongside the app in tests and may progress the audit
+    // before this assertion runs, so any valid pipeline status is acceptable.
+    expect(AuditStatus.options).toContain(getBody.status as AuditStatus)
   })
 
   it('POST /audits enforces the monthly quota via real usage tracking (no manual usage insert)', async () => {
