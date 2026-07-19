@@ -11,11 +11,15 @@ Start only the infrastructure services and run the app with Bun:
 ```bash
 cp .env.example .env
 # edit .env and add real AI / Stripe / R2 keys
+# set API_PORT=4000 — the Next.js dev server takes 3000
 
 docker compose up -d
 bun run db:push
 bun run dev
 ```
+
+For local PDF generation, install the Playwright browser once:
+`bunx playwright install chromium`.
 
 Services exposed on localhost:
 
